@@ -3,7 +3,7 @@ import { PrivateLayoutClient } from "@/components/private-layout-client"
 
 export const dynamic = "force-dynamic"
 
-export default function RootPage() {
+export default function DashboardPage() {
     return (
         <PrivateLayoutClient>
             <DashboardPageContent />
