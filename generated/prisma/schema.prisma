@@ -1,0 +1,282 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// core ERP models
+enum BudgetStatus {
+  PENDING
+  APPROVED
+  IN_PROGRESS
+  FINISHED
+  CANCELLED
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Client {
+  id        String       @id @default(cuid())
+  name      String
+  company   String?
+  taxId     String? // CPF/CNPJ
+  email     String?
+  phone     String?
+  status    ClientStatus @default(ACTIVE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  budgets   Budget[]
+  invoices  Invoice[]
+
+  @@map("client")
+}
+
+model ClientType {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  multiplier  Float    @default(1.0)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("client_type")
+}
+
+model ImageType {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  baseHours   Float    @default(1.0)
+  icon        String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("image_type")
+}
+
+model Difficulty {
+  id         String   @id @default(cuid())
+  name       String   @unique
+  multiplier Float    @default(1.0)
+  criteria   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("difficulty")
+}
+
+model Budget {
+  id             String         @id @default(cuid())
+  projectName    String
+  clientId       String
+  client         Client         @relation(fields: [clientId], references: [id])
+  clientTypeName String
+  category       String?
+  deadline       String?
+  status         BudgetStatus   @default(PENDING)
+  totalValue     Float          @default(0)
+  // Pricing rates (snapshot for this budget)
+  baseHours      Float          @default(140)
+  hourlyRate     Float          @default(0)
+  profitMargin   Float          @default(20)
+  multiplier     Float          @default(1.0)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  variableCosts  VariableCost[]
+  items          BudgetItem[]
+  invoices       Invoice[]
+
+  @@index([clientId])
+  @@map("budget")
+}
+
+model BudgetItem {
+  id                   String   @id @default(cuid())
+  budgetId             String
+  budget               Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  description          String
+  imageTypeName        String
+  difficultyName       String
+  difficultyMultiplier Float    @default(1.0)
+  baseHoursUnit        Float    @default(1.0)
+  estimatedHours       Float    @default(1.0)
+  quantity             Int      @default(1)
+  unitValue            Float    @default(0)
+  totalValue           Float    @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([budgetId])
+  @@map("budget_item")
+}
+
+model FixedCost {
+  id          String   @id @default(cuid())
+  description String
+  category    String?
+  value       Float
+  dueDate     Int? // day of month 1-31
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("fixed_cost")
+}
+
+model VariableCost {
+  id          String   @id @default(cuid())
+  description String
+  value       Float
+  date        DateTime @default(now())
+  budgetId    String?
+  budget      Budget?  @relation(fields: [budgetId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([budgetId])
+  @@map("variable_cost")
+}
+
+enum BriefingType {
+  TECHNICAL
+  GENERAL
+}
+
+model Briefing {
+  id          String       @id @default(cuid())
+  type        BriefingType @default(GENERAL)
+  projectName String? // For technical briefings
+  clientName  String
+  email       String?
+  status      String       @default("Novo")
+  content     Json? // To store flexible briefing data
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("briefing")
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+model Media {
+  id         String    @id @default(cuid())
+  type       MediaType @default(IMAGE)
+  url        String
+  name       String
+  size       String?
+  isFavorite Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@map("media")
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  CANCELLED
+  OVERDUE
+}
+
+enum PaymentMethod {
+  STRIPE_BOLETO
+  STRIPE_CARD
+  PIX
+  MANUAL
+  MERCADOPAGO_PIX
+  MERCADOPAGO_CARD
+}
+
+model Invoice {
+  id            String         @id @default(cuid())
+  budgetId      String?
+  budget        Budget?        @relation(fields: [budgetId], references: [id])
+  clientId      String
+  client        Client         @relation(fields: [clientId], references: [id])
+  amount        Float
+  status        InvoiceStatus  @default(PENDING)
+  dueDate       DateTime
+  paymentMethod PaymentMethod?
+  stripeId      String?        @unique // Stripe Invoice or Session ID
+  mercadopagoId String? // Mercado Pago Preference ID (last created)
+  paidAt        DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([budgetId])
+  @@index([clientId])
+  @@map("invoice")
+}
