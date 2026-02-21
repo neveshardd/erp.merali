@@ -12,9 +12,10 @@ export function middleware(request: NextRequest) {
 
     // Se não há sessão e NÃO está em uma rota de auth → redireciona para login
     if (!session && !pathname.startsWith("/auth")) {
-        const loginUrl = new URL("/auth/signin", request.url);
-        loginUrl.searchParams.set("callbackUrl", pathname);
-        return NextResponse.redirect(loginUrl);
+        const url = request.nextUrl.clone();
+        url.pathname = "/auth/signin";
+        url.searchParams.set("callbackUrl", pathname);
+        return NextResponse.redirect(url);
     }
 
     return NextResponse.next();

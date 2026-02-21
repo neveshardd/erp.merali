@@ -13,7 +13,7 @@ import Link from "next/link"
 import { useDashboardStats } from "@/hooks/use-dashboard-stats"
 import { formatCurrency } from "@/lib/utils"
 
-export default function DashboardPage() {
+export function DashboardPageContent() {
     const { data, isLoading } = useDashboardStats()
 
     if (isLoading) {
