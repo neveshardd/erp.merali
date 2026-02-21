@@ -1,9 +1,9 @@
-"use client"
-
-import { DashboardPageContent } from "./dashboard-content"
+import { DashboardPageContent } from "@/app/dashboard-content"
 import { PrivateLayoutClient } from "@/components/private-layout-client"
 
-export default function Page() {
+export const dynamic = "force-dynamic"
+
+export default function RootPage() {
     return (
         <PrivateLayoutClient>
             <DashboardPageContent />

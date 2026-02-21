@@ -12,15 +12,12 @@ export function middleware(request: NextRequest) {
 
     // Se não há sessão e NÃO está em uma rota de auth → redireciona para login
     if (!session && !pathname.startsWith("/auth")) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/auth/signin";
-        url.searchParams.set("callbackUrl", pathname);
-        return NextResponse.redirect(url);
+        return NextResponse.redirect(new URL("/auth/signin?callbackUrl=" + pathname, request.url));
     }
 
     return NextResponse.next();
 }
 
 export const config = {
-    matcher: ["/((?!api|_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff2?|ttf|eot)$).*)"],
+    matcher: ["/((?!api|_next/static|_next/image|favicon\\.ico|test|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff2?|ttf|eot)$).*)"],
 };
