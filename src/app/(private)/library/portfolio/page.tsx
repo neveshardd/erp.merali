@@ -14,7 +14,9 @@ import { Button } from "@/components/ui/button"
 import { useMedia } from "@/hooks/use-media"
 import type { MediaItem } from "@/hooks/use-media"
 import { cn } from "@/lib/utils"
-import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer"
+import dynamic from "next/dynamic";
+const PDFDownloadLink = dynamic(() => import("@/components/pdf-download"), { ssr: false });
+const PDFViewer = dynamic(() => import("@/components/pdf-viewer"), { ssr: false });
 import { PortfolioPDFDocument } from "../portfolio-document"
 
 // ── Miniatura da imagem favorita ──────────────────────────────────────────────

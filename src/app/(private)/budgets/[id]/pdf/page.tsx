@@ -52,7 +52,8 @@ interface BudgetPDFData {
     }>
 }
 
-import { PDFDownloadLink } from "@react-pdf/renderer"
+import dynamic from "next/dynamic";
+const PDFDownloadLink = dynamic(() => import("@/components/pdf-download"), { ssr: false });
 import { BudgetPDFDocument } from "./document"
 
 function useBudgetPDF(id: string) {

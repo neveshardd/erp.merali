@@ -19,7 +19,8 @@ import Image from "next/image"
 import { useQuery } from "@tanstack/react-query"
 import axios from "axios"
 
-import { PDFDownloadLink } from "@react-pdf/renderer"
+import dynamic from "next/dynamic";
+const PDFDownloadLink = dynamic(() => import("@/components/pdf-download"), { ssr: false });
 import { UsagePDFDocument } from "./document"
 
 function useUsage(id: string) {

@@ -17,7 +17,8 @@ import { useQuery } from "@tanstack/react-query"
 import axios from "axios"
 import { formatCurrency } from "@/lib/utils"
 
-import { PDFDownloadLink } from "@react-pdf/renderer"
+import dynamic from "next/dynamic";
+const PDFDownloadLink = dynamic(() => import("@/components/pdf-download"), { ssr: false });
 import { AddendumPDFDocument } from "./document"
 
 function useAddendum(id: string) {

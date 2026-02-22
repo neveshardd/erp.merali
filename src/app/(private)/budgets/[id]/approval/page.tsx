@@ -18,7 +18,8 @@ import { useQuery } from "@tanstack/react-query"
 import axios from "axios"
 import { useState } from "react"
 
-import { PDFDownloadLink } from "@react-pdf/renderer"
+import dynamic from "next/dynamic";
+const PDFDownloadLink = dynamic(() => import("@/components/pdf-download"), { ssr: false });
 import { ApprovalPDFDocument } from "./document"
 
 function useApproval(id: string) {

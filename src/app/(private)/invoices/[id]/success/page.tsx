@@ -8,7 +8,8 @@ import { motion } from "framer-motion"
 import axios from "axios"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { PDFDownloadLink } from "@react-pdf/renderer"
+import dynamic from "next/dynamic";
+const PDFDownloadLink = dynamic(() => import("@/components/pdf-download"), { ssr: false });
 import { InvoiceReceiptPDFDocument } from "./receipt-document"
 import type { InvoiceReceiptPDFProps } from "./receipt-document"
 
