@@ -1,17 +1,5 @@
 import { S3Client } from "@aws-sdk/client-s3";
 
-if (!process.env.CLOUDFLARE_R2_ACCESS_KEY_ID && process.env.NODE_ENV === "production") {
-  console.warn("Missing CLOUDFLARE_R2_ACCESS_KEY_ID");
-}
-
-if (!process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY && process.env.NODE_ENV === "production") {
-  console.warn("Missing CLOUDFLARE_R2_SECRET_ACCESS_KEY");
-}
-
-if (!process.env.CLOUDFLARE_R2_ENDPOINT && process.env.NODE_ENV === "production") {
-  console.warn("Missing CLOUDFLARE_R2_ENDPOINT");
-}
-
 export const s3Client = new S3Client({
   region: "auto",
   endpoint: process.env.CLOUDFLARE_R2_ENDPOINT || "https://dummy.r2.cloudflarestorage.com",
