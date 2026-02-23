@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { QueryProvider } from "@/components/providers/query-provider";
 
 export default async function PdfLayout({
   children,
@@ -15,5 +16,5 @@ export default async function PdfLayout({
     redirect("/auth/signin");
   }
 
-  return <>{children}</>;
+  return <QueryProvider>{children}</QueryProvider>;
 }
