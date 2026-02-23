@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button"
 import { useMedia } from "@/hooks/use-media"
 import type { MediaItem } from "@/hooks/use-media"
 import { cn } from "@/lib/utils"
-import { PortfolioPDFDocument } from "../portfolio-document"
+import { PortfolioPDFDocument } from "./portfolio-document"
 
 // ── Miniatura da imagem favorita ──────────────────────────────────────────────
 function ImageThumb({ item }: { item: MediaItem }) {
