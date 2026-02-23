@@ -3,22 +3,25 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { auth } from "./src/lib/auth";
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
-const prisma = new PrismaClient({ adapter });
+const DATABASE_URL = process.env.DATABASE_URL;
 
 // ── Credenciais do usuário seed (via .env) ───────────────────────────────────
 const SEED_NAME = process.env.SEED_NAME;
 const SEED_EMAIL = process.env.SEED_EMAIL;
 const SEED_PASSWORD = process.env.SEED_PASSWORD;
 
-if (!SEED_NAME || !SEED_EMAIL || !SEED_PASSWORD) {
+if (!DATABASE_URL || !SEED_NAME || !SEED_EMAIL || !SEED_PASSWORD) {
     console.error("Variáveis de ambiente obrigatórias não definidas:");
+    if (!DATABASE_URL) console.error("   - DATABASE_URL");
     if (!SEED_NAME) console.error("   - SEED_NAME");
     if (!SEED_EMAIL) console.error("   - SEED_EMAIL");
     if (!SEED_PASSWORD) console.error("   - SEED_PASSWORD");
     console.error("\n   Defina-as no arquivo .env e tente novamente.");
     process.exit(1);
 }
+
+const adapter = new PrismaPg({ connectionString: DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 // ────────────────────────────────────────────────────────────────────────────
 
 async function main() {

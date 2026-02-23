@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
     title: "Merali ERP",
     description: "Plataforma de Gerenciamento Merali",
+    icons: {
+        icon: "/logo.png"
+    }
 };
 
 export default function RootLayout({
