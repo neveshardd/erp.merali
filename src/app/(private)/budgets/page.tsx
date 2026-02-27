@@ -181,7 +181,7 @@ export default function BudgetsPage() {
                                         {getStatusLabel(budget.status)}
                                     </Badge>
                                 </TableCell>
-                                <TableCell className="text-right pr-6">
+                                <TableCell className="text-right pr-6" onClick={(e) => e.stopPropagation()}>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full cursor-pointer">
