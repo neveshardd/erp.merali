@@ -80,7 +80,7 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
                                         "p-5 flex gap-4 text-left border-b border-neutral-50 dark:border-neutral-900/50 hover:bg-neutral-50/50 dark:hover:bg-neutral-900/30 transition-all group relative",
                                         !notif.read && "bg-blue-50/30 dark:bg-blue-900/5"
                                     )}
-                                    onClick={() => markAsRead.mutate(notif.id)}
+                                    onClick={() => markAsRead(notif.id)}
                                 >
                                     {!notif.read && (
                                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600" />
@@ -123,11 +123,11 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
 
                 <div className="p-4 bg-neutral-50 dark:bg-neutral-900/50 border-t border-neutral-100 dark:border-neutral-800 flex justify-center">
                     <button 
-                        onClick={() => markAllAsRead.mutate()}
-                        disabled={unreadCount === 0 || markAllAsRead.isPending}
+                        onClick={() => markAllAsRead()}
+                        disabled={unreadCount === 0}
                         className="text-[10px] font-black uppercase tracking-widest text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors disabled:opacity-30"
                     >
-                        {markAllAsRead.isPending ? 'Processando...' : 'Marcar todas como lidas'}
+                        Marcar todas como lidas
                     </button>
                 </div>
             </DialogContent>

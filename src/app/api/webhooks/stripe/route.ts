@@ -95,24 +95,30 @@ export async function POST(request: Request) {
 
         console.log(`✅ Invoice ${invoiceId} marked as PAID via Stripe event ${event.type}`)
 
-        // Fetch invoice with client to build notification
-        const invoice = await prisma.invoice.findUnique({
-          where: { id: invoiceId },
-          include: { client: true }
-        })
+        // Create notification — isolated try/catch so it never breaks the webhook
+        try {
+          const invoice = await prisma.invoice.findUnique({
+            where: { id: invoiceId },
+            include: { client: true }
+          })
 
-        const amountFormatted = session.amount_total
-          ? formatBRL(session.amount_total / 100)
-          : 'valor desconhecido'
+          const amountFormatted = session.amount_total
+            ? formatBRL(session.amount_total / 100)
+            : 'valor desconhecido'
 
-        await createNotification({
-          title: 'Pagamento Confirmado',
-          description: `${invoice?.client.name ?? 'Cliente'} pagou ${amountFormatted} via Stripe.`,
-          type: 'success',
-          link: '/invoices'
-        })
+          const clientName = invoice?.client?.name ?? 'Cliente'
 
-        console.log('🔔 Notification created for payment confirmation')
+          await createNotification({
+            title: 'Pagamento Confirmado',
+            description: `${clientName} pagou ${amountFormatted} via Stripe.`,
+            type: 'success',
+            link: '/invoices'
+          })
+
+          console.log('🔔 Notification created successfully')
+        } catch (notifError: any) {
+          console.error('⚠️ Failed to create notification (non-fatal):', notifError.message)
+        }
         break
       }
 
