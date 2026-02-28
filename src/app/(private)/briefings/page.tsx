@@ -24,18 +24,10 @@ import {
     TableHeader, 
     TableRow 
 } from "@/components/ui/table"
-import { 
-    DropdownMenu, 
-    DropdownMenuContent, 
-    DropdownMenuItem, 
-    DropdownMenuLabel, 
-    DropdownMenuSeparator, 
-    DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BriefingModal } from "./briefing-modal"
 import { BriefingDetailsModal } from "./briefing-details-modal"
@@ -43,12 +35,15 @@ import { useBriefings, useDeleteBriefing } from "@/hooks/use-briefings"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { toast } from "sonner"
+import { ConfirmModal } from "@/components/confirm-modal"
 
 export default function BriefingsPage() {
     const [searchQuery, setSearchQuery] = React.useState("")
     const [isModalOpen, setIsModalOpen] = React.useState(false)
     const [isDetailsOpen, setIsDetailsOpen] = React.useState(false)
     const [selectedBriefing, setSelectedBriefing] = React.useState<any>(null)
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false)
+    const [pendingDeleteId, setPendingDeleteId] = React.useState<string | null>(null)
 
     const { data: briefings = [], isLoading } = useBriefings()
     const deleteBriefing = useDeleteBriefing()
@@ -61,14 +56,19 @@ export default function BriefingsPage() {
         toast.success("Link copiado para a área de transferência!")
     }
 
-    const handleDelete = async (id: string) => {
-        if (confirm("Tem certeza que deseja excluir este briefing?")) {
-            try {
-                await deleteBriefing.mutateAsync(id)
-                toast.success("Briefing excluído com sucesso!")
-            } catch (error) {
-                toast.error("Erro ao excluir briefing")
-            }
+    const handleDelete = (id: string) => {
+        setPendingDeleteId(id)
+        setConfirmDeleteOpen(true)
+    }
+
+    const executeDelete = async () => {
+        if (!pendingDeleteId) return
+        try {
+            await deleteBriefing.mutateAsync(pendingDeleteId)
+            toast.success("Briefing excluído com sucesso!")
+            setConfirmDeleteOpen(false)
+        } catch (error) {
+            toast.error("Erro ao excluir briefing")
         }
     }
 
@@ -250,6 +250,14 @@ export default function BriefingsPage() {
                 open={isDetailsOpen} 
                 onOpenChange={setIsDetailsOpen} 
                 briefing={selectedBriefing} 
+            />
+
+            <ConfirmModal 
+                open={confirmDeleteOpen}
+                onOpenChange={setConfirmDeleteOpen}
+                onConfirm={executeDelete}
+                title="Excluir Briefing?"
+                description="Esta ação removerá permanentemente o briefing e todos os dados associados."
             />
         </main>
     )

@@ -197,6 +197,19 @@ const s = StyleSheet.create({
 export interface PortfolioPDFProps {
     images: Array<{ id: string; url: string; name: string }>
     year?: string
+    configs?: {
+        coverTitle?: string
+        coverSubtitle?: string
+        eyebrow?: string
+        manifestoTitle?: string
+        manifestoText?: string
+        footerText?: string
+        textCards?: string
+        contactEmail?: string
+        contactPhone?: string
+        instagram?: string
+        website?: string
+    }
 }
 
 function cleanName(n: string) {
@@ -239,10 +252,14 @@ function GalleryPage({
     items,
     pageNum,
     total,
+    brandText = "Merali Studio · Portfólio",
+    footerText = "Merali Studio de Visualização · meralistudio.com.br"
 }: {
     items: GroupItem[]
     pageNum: number
     total: number
+    brandText?: string
+    footerText?: string
 }) {
     // Distribui alternadamente entre as duas colunas
     const col1 = items.filter((_, i) => i % 2 === 0)
@@ -253,7 +270,7 @@ function GalleryPage({
     return (
         <Page size="A4" style={s.galleryPage}>
             <View style={s.header}>
-                <Text style={s.headerBrand}>Merali Studio · Portfólio</Text>
+                <Text style={s.headerBrand}>{brandText}</Text>
                 <Text style={s.headerNum}>{pageNum} / {total}</Text>
             </View>
 
@@ -276,7 +293,7 @@ function GalleryPage({
             </View>
 
             <View style={s.footer}>
-                <Text style={s.footerText}>Merali Studio de Visualização · meralistudio.com.br</Text>
+                <Text style={s.footerText}>{footerText}</Text>
                 <View style={s.footerDot} />
                 <Text style={s.footerText}>Portfólio Selecionado</Text>
             </View>
@@ -285,9 +302,22 @@ function GalleryPage({
 }
 
 // ── Documento principal ───────────────────────────────────────────────────────
-export function PortfolioPDFDocument({ images, year }: PortfolioPDFProps) {
+export function PortfolioPDFDocument({ images, year, configs }: PortfolioPDFProps) {
     const coverImage  = images[0]
     const currentYear = year ?? new Date().getFullYear().toString()
+
+    const defaultTexts = [
+        "A iluminação correta não apenas mostra, ela revela o propósito do espaço.",
+        "O realismo é a ferramenta mais poderosa para alinhar expectativas e acelerar aprovações.",
+        "Buscamos o equilíbrio entre a perfeição técnica e a alma do projeto arquitetônico.",
+        "Imagens que não apenas apresentam volumes, mas evocam a sensação de habitabilidade.",
+        "Nossa meta é reduzir a distância entre o sonho do cliente e a realidade construída.",
+        "Cada render é uma oportunidade de contar a história que a planta baixa ainda não revela."
+    ]
+
+    const textCards = configs?.textCards 
+        ? configs.textCards.split('\n').filter(t => t.trim().length > 0)
+        : defaultTexts
 
     // 4 itens por página
     const rawChunks = chunk(images, 4)
@@ -300,7 +330,7 @@ export function PortfolioPDFDocument({ images, year }: PortfolioPDFProps) {
             for (let i = 0; i < needed; i++) {
                 items.push({ 
                     type: 'TEXT', 
-                    content: TEXT_CARDS[(pageIdx + items.length + i) % TEXT_CARDS.length] 
+                    content: textCards[(pageIdx + items.length + i) % textCards.length] 
                 })
             }
         }
@@ -316,9 +346,9 @@ export function PortfolioPDFDocument({ images, year }: PortfolioPDFProps) {
                 )}
                 <View style={s.coverOverlay} />
                 <View style={s.coverContent}>
-                    <Text style={s.eyebrow}>High-End 3D Visualization Studio</Text>
-                    <Text style={s.coverTitle}>Merali{'\n'}Studio</Text>
-                    <Text style={s.coverSub}>Visualização Arquitetônica de Alto Padrão</Text>
+                    <Text style={s.eyebrow}>{configs?.eyebrow || "High-End 3D Visualization Studio"}</Text>
+                    <Text style={s.coverTitle}>{configs?.coverTitle || "Merali\nStudio"}</Text>
+                    <Text style={s.coverSub}>{configs?.coverSubtitle || "Visualização Arquitetônica de Alto Padrão"}</Text>
                     <View style={s.divider} />
                     <View style={s.meta}>
                         <View style={s.metaItem}>
@@ -341,13 +371,10 @@ export function PortfolioPDFDocument({ images, year }: PortfolioPDFProps) {
             <Page size="A4" style={s.manifestoPage}>
                 <Text style={s.manifestoEyebrow}>Nossa Essência</Text>
                 <Text style={s.manifestoTitle}>
-                    Transformamos visões em{"\n"}experiências visuais.
+                    {configs?.manifestoTitle || "Transformamos visões em\nexperiências visuais."}
                 </Text>
                 <Text style={s.manifestoText}>
-                    Na <Text style={s.manifestoHighlight}>Merali Studio</Text>, acreditamos que a visualização 3D vai além de simples pixels. Nossa missão é capturar a intenção de cada projeto e traduzi-la em imagens que evocam emoção e clareza.
-                </Text>
-                <Text style={s.manifestoText}>
-                    Unimos precisão técnica com uma sensibilidade artística apurada, garantindo que cada render conte uma história e valorize cada detalhe da sua arquitetura.
+                    {configs?.manifestoText || "Na Merali Studio, acreditamos que a visualização 3D vai além de simples pixels. Nossa missão é capturar a intenção de cada projeto e traduzi-la em imagens que evocam emoção e clareza. Unimos precisão técnica com uma sensibilidade artística apurada, garantindo que cada render conte uma história e valorize cada detalhe da sua arquitetura."}
                 </Text>
                 <View style={[s.divider, { backgroundColor: WHITE, marginTop: 20, opacity: 0.2 }]} />
             </Page>
@@ -359,6 +386,8 @@ export function PortfolioPDFDocument({ images, year }: PortfolioPDFProps) {
                     items={group}
                     pageNum={i + 1}
                     total={pages.length}
+                    brandText={`${configs?.coverTitle || "Merali Studio"} · Portfólio`}
+                    footerText={configs?.footerText || "Merali Studio de Visualização · meralistudio.com.br"}
                 />
             ))}
 
@@ -370,19 +399,20 @@ export function PortfolioPDFDocument({ images, year }: PortfolioPDFProps) {
                         Vamos construir o futuro juntos?
                     </Text>
                     <Text style={[s.coverTitle, { fontSize: 54, textAlign: 'center' }]}>
-                        Merali Studio
+                        {configs?.coverTitle || "Merali Studio"}
                     </Text>
                     <Text style={[s.coverSub, { textAlign: 'center', marginBottom: 24, fontSize: 16 }]}>
                         Visualização de Arquitetura
                     </Text>
                     <View style={[s.divider, { alignSelf: 'center' }]} />
                     <View style={{ alignItems: 'center', gap: 8 }}>
-                        <Text style={[s.metaValue, { opacity: 0.6, fontSize: 10 }]}>meralistudio.com.br</Text>
-                        <Text style={[s.metaValue, { opacity: 0.6, fontSize: 10 }]}>@merali_studio</Text>
-                        <Text style={[s.metaValue, { opacity: 0.6, fontSize: 10 }]}>contato@meralistudio.com.br</Text>
+                        <Text style={[s.metaValue, { opacity: 0.6, fontSize: 10 }]}>{configs?.website || "meralistudio.com.br"}</Text>
+                        <Text style={[s.metaValue, { opacity: 0.6, fontSize: 10 }]}>{configs?.instagram || "@merali_studio"}</Text>
+                        <Text style={[s.metaValue, { opacity: 0.6, fontSize: 10 }]}>{configs?.contactEmail || "contato@meralistudio.com.br"}</Text>
                     </View>
                 </View>
             </Page>
         </Document>
     )
 }
+

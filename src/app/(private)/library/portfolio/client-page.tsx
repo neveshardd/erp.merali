@@ -2,7 +2,7 @@
 
 import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import {
     Download,
     Heart,
@@ -17,6 +17,7 @@ import { useMedia } from "@/hooks/use-media"
 import type { MediaItem } from "@/hooks/use-media"
 import { cn } from "@/lib/utils"
 import { PortfolioPDFDocument } from "./portfolio-document"
+import { useConfigs } from "@/hooks/use-configs"
 
 // ── Miniatura da imagem favorita ──────────────────────────────────────────────
 function ImageThumb({ item }: { item: MediaItem }) {
@@ -62,9 +63,11 @@ function ImageThumb({ item }: { item: MediaItem }) {
 // ── Modal de Preview PDF ──────────────────────────────────────────────────────
 function PDFPreviewModal({
     images,
+    configs,
     onClose,
 }: {
     images: Array<{ id: string; url: string; name: string }>
+    configs?: any
     onClose: () => void
 }) {
     useEffect(() => {
@@ -98,8 +101,8 @@ function PDFPreviewModal({
 
                 <div className="flex items-center gap-3">
                     <PDFDownloadLink
-                        document={<PortfolioPDFDocument images={images} />}
-                        fileName={`merali-portfolio-${new Date().getFullYear()}.pdf`}
+                        document={<PortfolioPDFDocument images={images} configs={configs} />}
+                        fileName={`${configs?.coverTitle?.toLowerCase().replace(/\s+/g, '-') || 'portfolio'}-${new Date().getFullYear()}.pdf`}
                     >
                         {({ loading }) => (
                             <Button
@@ -129,7 +132,7 @@ function PDFPreviewModal({
             {/* PDF Viewer */}
             <div className="flex-1 overflow-hidden">
                 <PDFViewer width="100%" height="100%" showToolbar={false} style={{ border: "none" }}>
-                    <PortfolioPDFDocument images={images} />
+                    <PortfolioPDFDocument images={images} configs={configs} />
                 </PDFViewer>
             </div>
         </div>
@@ -139,10 +142,25 @@ function PDFPreviewModal({
 // ── Componente principal ──────────────────────────────────────────────────────
 export default function PortfolioPage() {
     const { data: allMedia = [], isLoading } = useMedia()
+    const { data: configGroups } = useConfigs()
     const [showPreview, setShowPreview]       = useState(false)
-    const [pdfImages, setPdfImages]           = useState<Array<{ id: string; url: string; name: string }>>([]
-    )
+    const [pdfImages, setPdfImages]           = useState<Array<{ id: string; url: string; name: string }>>([])
     const [converting, setConverting]         = useState(false)
+
+    // Memoized ERP Portfolio Config
+    const erpPortfolioConfigs = useMemo(() => {
+        if (!configGroups) return undefined
+        const group = configGroups.find((g: any) => g.name === "erp-portfolio")
+        if (!group) return undefined
+        
+        const configs: Record<string, string> = {}
+        group.configs.forEach((c: any) => {
+            configs[c.key] = c.value
+        })
+        return configs
+    }, [configGroups])
+
+
 
     // Apenas imagens favoritas — vídeos excluídos
     const favorites = (allMedia as MediaItem[])
@@ -186,7 +204,11 @@ export default function PortfolioPage() {
     return (
         <>
             {showPreview && pdfReady && (
-                <PDFPreviewModal images={pdfImages} onClose={() => setShowPreview(false)} />
+                <PDFPreviewModal 
+                    images={pdfImages} 
+                    configs={erpPortfolioConfigs}
+                    onClose={() => setShowPreview(false)} 
+                />
             )}
 
             <main className="flex flex-col h-full">
@@ -227,8 +249,8 @@ export default function PortfolioPage() {
                             </Button>
 
                             <PDFDownloadLink
-                                document={<PortfolioPDFDocument images={pdfImages} />}
-                                fileName={`merali-portfolio-${new Date().getFullYear()}.pdf`}
+                                document={<PortfolioPDFDocument images={pdfImages} configs={erpPortfolioConfigs} />}
+                                fileName={`${erpPortfolioConfigs?.coverTitle?.toLowerCase().replace(/\s+/g, '-') || 'portfolio'}-${new Date().getFullYear()}.pdf`}
                             >
                                 {({ loading }) => (
                                     <Button

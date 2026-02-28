@@ -280,3 +280,28 @@ model Invoice {
   @@index([clientId])
   @@map("invoice")
 }
+
+model ConfigGroup {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  configs   Config[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("config_group")
+}
+
+model Config {
+  id          String      @id @default(cuid())
+  key         String      @unique
+  value       String      @db.Text
+  label       String?
+  description String?
+  groupId     String
+  group       ConfigGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([groupId])
+  @@map("config")
+}

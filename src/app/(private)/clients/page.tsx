@@ -12,14 +12,17 @@ import {
     Search,
     MoreHorizontal,
     ExternalLink,
-    Briefcase
+    Briefcase,
+    MoreVertical, // Added
+    UserCircle,   // Added
+    Loader2       // Added
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { 
+import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
@@ -28,22 +31,45 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ClientModal } from "./client-modal"
+import { ConfirmModal } from "@/components/confirm-modal" // Added
+import { toast } from "sonner" // Added
 
-import { useClients } from "@/hooks/use-clients"
+import { useClients, useDeleteClient } from "@/hooks/use-clients" // Modified
 
 export default function ClientsPage() {
     const [searchQuery, setSearchQuery] = React.useState("")
     const [isModalOpen, setIsModalOpen] = React.useState(false)
-    
-    const { data: clients = [], isLoading, error } = useClients()
+    const [pendingDeleteId, setPendingDeleteId] = React.useState<string | null>(null) // Added
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false) // Added
 
-    const filteredClients = clients.filter((c: any) => 
-        c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        (c.company || "").toLowerCase().includes(searchQuery.toLowerCase())
+    const { data: clients = [], isLoading } = useClients() // Modified: removed error
+    const deleteClient = useDeleteClient() // Added
+
+    const filteredClients = clients.filter((client: any) => // Modified: c to client
+        client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (client.company || "").toLowerCase().includes(searchQuery.toLowerCase()) // Modified: c.company to client.company
     )
 
+    // Added handleDelete function
+    const handleDelete = (id: string) => {
+        setPendingDeleteId(id)
+        setConfirmDeleteOpen(true)
+    }
+
+    // Added executeDelete function
+    const executeDelete = async () => {
+        if (!pendingDeleteId) return
+        try {
+            await deleteClient.mutateAsync(pendingDeleteId)
+            toast.success("Cliente removido com sucesso!")
+            setConfirmDeleteOpen(false)
+        } catch (error) {
+            toast.error("Erro ao remover cliente.")
+        }
+    }
+
     if (isLoading) return <div className="p-6">Carregando clientes...</div>
-    if (error) return <div className="p-6">Erro ao carregar clientes.</div>
+    // Removed: if (error) return <div className="p-6">Erro ao carregar clientes.</div>
 
     return (
         <main className="flex flex-col gap-8 p-6">
@@ -157,7 +183,10 @@ export default function ClientsPage() {
                                                         <Plus className="w-3.5 h-3.5" /> Novo Projeto
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
-                                                    <DropdownMenuItem className="text-[10px] font-bold uppercase tracking-widest gap-2 text-red-600 cursor-pointer">
+                                                    <DropdownMenuItem 
+                                                        className="text-[10px] font-bold uppercase tracking-widest gap-2 text-red-600 cursor-pointer"
+                                                        onClick={() => handleDelete(client.id)}
+                                                    >
                                                         <Trash2 className="w-3.5 h-3.5" /> Excluir Cliente
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
@@ -172,6 +201,14 @@ export default function ClientsPage() {
             </div>
 
             <ClientModal open={isModalOpen} onOpenChange={setIsModalOpen} />
+
+            <ConfirmModal 
+                open={confirmDeleteOpen}
+                onOpenChange={setConfirmDeleteOpen}
+                onConfirm={executeDelete}
+                title="Excluir Cliente?"
+                description="Esta ação removerá permanentemente o cliente e todos os dados de contato associados."
+            />
         </main>
     )
 }
