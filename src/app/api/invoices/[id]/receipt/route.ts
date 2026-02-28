@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { stripe } from '@/lib/stripe'
 // @ts-ignore
 import extenso from 'extenso'
 
@@ -14,7 +15,7 @@ export async function GET(
     const { searchParams } = new URL(request.url)
     const sessionId = searchParams.get('session_id') || ''
 
-    const invoice = await prisma.invoice.findUnique({
+    let invoice = await prisma.invoice.findUnique({
       where: { id },
       include: {
         client: true,
@@ -25,6 +26,30 @@ export async function GET(
     if (!invoice) {
       return NextResponse.json({ error: 'Fatura não encontrada' }, { status: 404 })
     }
+
+    // ── Self-Healing: Verificação manual se o webhook falhou ─────────────
+    // Se temos um sessionId e a fatura ainda não consta como paga, checamos no Stripe
+    if (sessionId && invoice.status !== 'PAID') {
+      try {
+        const session = await stripe.checkout.sessions.retrieve(sessionId)
+        if (session.payment_status === 'paid') {
+           invoice = await prisma.invoice.update({
+            where: { id },
+            data: {
+              status: 'PAID',
+              paidAt: new Date(),
+              stripeId: session.id,
+              paymentMethod: session.payment_method_types?.[0] === 'card' ? 'STRIPE_CARD' : 'STRIPE_BOLETO'
+            },
+            include: { client: true, budget: true }
+          })
+          console.log(`✅ [Self-Healing] Fatura ${id} confirmada manualmente via session_id`)
+        }
+      } catch (e) {
+        console.error('[STRIPE_RECOVER_ERROR]', e)
+      }
+    }
+
 
     const amount = invoice.amount ?? 0
     const valueFormatted = amount.toFixed(2).replace('.', ',')
