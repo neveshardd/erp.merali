@@ -1,19 +1,19 @@
-import { prisma } from './prisma'
+import { prisma } from "./prisma";
 
-export type NotificationType = 'success' | 'warning' | 'info' | 'error'
+export type NotificationType = "success" | "warning" | "info" | "error";
 
 interface CreateNotificationParams {
-  title: string
-  description: string
-  type?: NotificationType
-  link?: string
+  title: string;
+  description: string;
+  type?: NotificationType;
+  link?: string;
 }
 
 export async function createNotification({
   title,
   description,
-  type = 'info',
-  link
+  type = "info",
+  link,
 }: CreateNotificationParams) {
   try {
     const notification = await prisma.notification.create({
@@ -21,12 +21,12 @@ export async function createNotification({
         title,
         description,
         type,
-        link
-      }
-    })
-    return notification
+        link,
+      },
+    });
+    return notification;
   } catch (error) {
-    console.error('Error creating notification:', error)
-    return null
+    console.error("Error creating notification:", error);
+    return null;
   }
 }

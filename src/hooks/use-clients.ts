@@ -1,41 +1,41 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import axios from "axios"
-import { ClientInput } from "@/schemas/client"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import type { ClientInput } from "@/schemas/client";
 
 export function useClients() {
   return useQuery({
     queryKey: ["clients"],
     queryFn: async () => {
-      const { data } = await axios.get("/api/clients")
-      return data
+      const { data } = await axios.get("/api/clients");
+      return data;
     },
-  })
+  });
 }
 
 export function useCreateClient() {
-  const queryClient = useQueryClient()
-  
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (client: ClientInput) => {
-      const { data } = await axios.post("/api/clients", client)
-      return data
+      const { data } = await axios.post("/api/clients", client);
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["clients"] })
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
     },
-  })
+  });
 }
 
 export function useDeleteClient() {
-  const queryClient = useQueryClient()
-  
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await axios.delete(`/api/clients/${id}`)
-      return data
+      const { data } = await axios.delete(`/api/clients/${id}`);
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["clients"] })
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
     },
-  })
+  });
 }

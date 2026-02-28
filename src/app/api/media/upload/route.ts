@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { s3Client, BUCKET_NAME } from "@/lib/s3";
+import { NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
+import { BUCKET_NAME, s3Client } from "@/lib/s3";
 
 export async function POST(request: Request) {
   try {
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     if (!filename || !contentType) {
       return NextResponse.json(
         { error: "Filename and contentType are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -24,7 +24,9 @@ export async function POST(request: Request) {
       ContentType: contentType,
     });
 
-    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    const signedUrl = await getSignedUrl(s3Client, command, {
+      expiresIn: 3600,
+    });
 
     return NextResponse.json({
       url: signedUrl,
@@ -35,7 +37,7 @@ export async function POST(request: Request) {
     console.error("Error generating signed URL:", error);
     return NextResponse.json(
       { error: "Erro ao gerar URL de upload" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

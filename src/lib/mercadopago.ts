@@ -1,6 +1,6 @@
-import { MercadoPagoConfig } from 'mercadopago';
+import { MercadoPagoConfig } from "mercadopago";
 
 export const mpClient = new MercadoPagoConfig({
-  accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || '',
-  options: { timeout: 5000 }
+  accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || "",
+  options: { timeout: 5000 },
 });

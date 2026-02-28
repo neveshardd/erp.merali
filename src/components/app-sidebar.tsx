@@ -1,27 +1,25 @@
-"use client"
+"use client";
 
-import * as React from "react"
 import {
-  Bot,
+  BookOpen,
+  Image as ImageIcon,
+  Layout,
   Settings2,
   SquareTerminal,
-  Image as ImageIcon,
   Users,
-  Layout,
-  BookOpen,
-} from "lucide-react"
-
-import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
-import { NavUser } from "@/components/nav-user"
+} from "lucide-react";
+import Link from "next/link";
+import type * as React from "react";
+import { NavMain } from "@/components/nav-main";
+import { NavProjects } from "@/components/nav-projects";
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar"
-import Link from "next/link"
+} from "@/components/ui/sidebar";
 
 // This is sample data.
 const data = {
@@ -103,7 +101,7 @@ const data = {
       icon: BookOpen,
     },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -111,7 +109,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <Link href="/" className="flex items-center gap-2">
           <img src="/logo.png" alt="" className="w-10 h-auto" />
-          <h1 className="font-bold text-lg group-data-[collapsible=icon]:hidden">Merali ERP</h1>
+          <h1 className="font-bold text-lg group-data-[collapsible=icon]:hidden">
+            Merali ERP
+          </h1>
         </Link>
       </SidebarHeader>
       <SidebarContent>
@@ -123,5 +123,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

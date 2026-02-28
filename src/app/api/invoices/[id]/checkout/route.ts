@@ -1,97 +1,112 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { stripe } from '@/lib/stripe'
-import { Preference } from 'mercadopago'
-import { mpClient } from '@/lib/mercadopago'
+import { Preference } from "mercadopago";
+import { NextResponse } from "next/server";
+import { mpClient } from "@/lib/mercadopago";
+import { prisma } from "@/lib/prisma";
+import { stripe } from "@/lib/stripe";
 
 // Supported methods:
 //   gateway: 'stripe' | 'mercadopago'  → legacy modal flow (both methods)
 //   method:  'pix' | 'card_installments' | 'card' | 'boleto' → single-method link
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = await params
-    const body = await request.json()
-    const { gateway, method } = body as { gateway?: string; method?: string }
+    const { id } = await params;
+    const body = await request.json();
+    const { gateway, method } = body as { gateway?: string; method?: string };
 
     const invoice = await prisma.invoice.findUnique({
       where: { id },
-      include: { client: true, budget: true }
-    })
+      include: { client: true, budget: true },
+    });
 
     if (!invoice) {
-      return NextResponse.json({ error: 'Fatura não encontrada' }, { status: 404 })
+      return NextResponse.json(
+        { error: "Fatura não encontrada" },
+        { status: 404 },
+      );
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const isProduction = appUrl.startsWith('https://')
-    const itemTitle = `PROJETO: ${invoice.budget?.projectName || 'SERVIÇOS DE VISUALIZAÇÃO'}`
-    const itemDesc = `REFERENTE À FATURA #${invoice.id.slice(-6).toUpperCase()}`
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const isProduction = appUrl.startsWith("https://");
+    const itemTitle = `PROJETO: ${invoice.budget?.projectName || "SERVIÇOS DE VISUALIZAÇÃO"}`;
+    const itemDesc = `REFERENTE À FATURA #${invoice.id.slice(-6).toUpperCase()}`;
 
     // ── Stripe ──────────────────────────────────────────────────────────────────
     // Handles: gateway='stripe', method='card', method='boleto'
-    const useStripe = gateway === 'stripe' || method === 'card' || method === 'boleto'
+    const useStripe =
+      gateway === "stripe" || method === "card" || method === "boleto";
     if (useStripe) {
-      const methodTypes: ('card' | 'boleto')[] =
-        method === 'boleto' ? ['boleto'] :
-        method === 'card'   ? ['card']   :
-        ['card', 'boleto']  // legacy: both
+      const methodTypes: ("card" | "boleto")[] =
+        method === "boleto"
+          ? ["boleto"]
+          : method === "card"
+            ? ["card"]
+            : ["card", "boleto"]; // legacy: both
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: methodTypes,
-        line_items: [{
-          price_data: {
-            currency: 'brl',
-            product_data: { name: itemTitle, description: itemDesc },
-            unit_amount: Math.round(invoice.amount * 100),
+        line_items: [
+          {
+            price_data: {
+              currency: "brl",
+              product_data: { name: itemTitle, description: itemDesc },
+              unit_amount: Math.round(invoice.amount * 100),
+            },
+            quantity: 1,
           },
-          quantity: 1,
-        }],
-        mode: 'payment',
+        ],
+        mode: "payment",
         success_url: `${appUrl}/invoices/${invoice.id}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${appUrl}/invoices/${invoice.id}`,
         metadata: { invoiceId: invoice.id },
         customer_email: invoice.client.email || undefined,
-      })
+      });
 
-      return NextResponse.json({ url: session.url })
+      return NextResponse.json({ url: session.url });
     }
 
     // ── Mercado Pago ─────────────────────────────────────────────────────────────
     // Handles: gateway='mercadopago', method='pix', method='card_installments'
     const excludedTypes: { id: string }[] =
-      method === 'pix'
+      method === "pix"
         ? [
-            { id: 'credit_card' },
-            { id: 'debit_card' },
-            { id: 'ticket' },
-            { id: 'prepaid_card' },
+            { id: "credit_card" },
+            { id: "debit_card" },
+            { id: "ticket" },
+            { id: "prepaid_card" },
           ]
-        : method === 'card_installments'
-        ? [
-            { id: 'bank_transfer' }, // PIX
-            { id: 'debit_card' },
-            { id: 'ticket' },
-            { id: 'prepaid_card' },
-          ]
-        : // legacy modal: PIX + credit card installments both allowed
-          [{ id: 'ticket' }, { id: 'atm' }, { id: 'debit_card' }, { id: 'prepaid_card' }]
+        : method === "card_installments"
+          ? [
+              { id: "bank_transfer" }, // PIX
+              { id: "debit_card" },
+              { id: "ticket" },
+              { id: "prepaid_card" },
+            ]
+          : // legacy modal: PIX + credit card installments both allowed
+            [
+              { id: "ticket" },
+              { id: "atm" },
+              { id: "debit_card" },
+              { id: "prepaid_card" },
+            ];
 
-    const maxInstallments = method === 'pix' ? 1 : 12
+    const maxInstallments = method === "pix" ? 1 : 12;
 
-    const preference = new Preference(mpClient)
+    const preference = new Preference(mpClient);
     const response = await preference.create({
       body: {
-        items: [{
-          id: invoice.id,
-          title: itemTitle,
-          description: itemDesc,
-          quantity: 1,
-          unit_price: Number(invoice.amount),
-          currency_id: 'BRL',
-        }],
+        items: [
+          {
+            id: invoice.id,
+            title: itemTitle,
+            description: itemDesc,
+            quantity: 1,
+            unit_price: Number(invoice.amount),
+            currency_id: "BRL",
+          },
+        ],
         payer: {
           email: invoice.client.email || undefined,
           name: invoice.client.name,
@@ -106,22 +121,29 @@ export async function POST(
             failure: `${appUrl}/invoices/${invoice.id}`,
             pending: `${appUrl}/invoices/${invoice.id}`,
           },
-          auto_return: 'approved' as const,
+          auto_return: "approved" as const,
         }),
         metadata: { invoice_id: invoice.id },
         external_reference: invoice.id,
-      }
-    })
+      },
+    });
 
     // Store last preference ID (non-blocking)
-    prisma.invoice.update({
-      where: { id: invoice.id },
-      data: { mercadopagoId: response.id }
-    }).catch((err: unknown) => console.warn('Could not store mercadopagoId:', err))
+    prisma.invoice
+      .update({
+        where: { id: invoice.id },
+        data: { mercadopagoId: response.id },
+      })
+      .catch((err: unknown) =>
+        console.warn("Could not store mercadopagoId:", err),
+      );
 
-    return NextResponse.json({ url: response.init_point })
+    return NextResponse.json({ url: response.init_point });
   } catch (error) {
-    console.error('Checkout error:', error)
-    return NextResponse.json({ error: 'Erro ao criar sessão de pagamento' }, { status: 500 })
+    console.error("Checkout error:", error);
+    return NextResponse.json(
+      { error: "Erro ao criar sessão de pagamento" },
+      { status: 500 },
+    );
   }
 }

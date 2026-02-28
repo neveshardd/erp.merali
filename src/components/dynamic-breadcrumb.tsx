@@ -1,7 +1,8 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import React from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,8 +10,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import React from "react"
+} from "@/components/ui/breadcrumb";
 
 // Map specific segments to readable names
 const routeMap: Record<string, string> = {
@@ -25,22 +25,22 @@ const routeMap: Record<string, string> = {
   "client-types": "Tipos de Clientes",
   "image-types": "Tipos de Imagens",
   difficulties: "Dificuldades",
-}
+};
 
 export function DynamicBreadcrumb() {
-  const pathname = usePathname()
-  const segments = pathname.split('/').filter(Boolean)
+  const pathname = usePathname();
+  const segments = pathname.split("/").filter(Boolean);
 
   if (segments.length === 0) {
     return (
-        <Breadcrumb>
-            <BreadcrumbList>
-                 <BreadcrumbItem>
-                    <BreadcrumbPage>Início</BreadcrumbPage>
-                 </BreadcrumbItem>
-            </BreadcrumbList>
-        </Breadcrumb>
-    )
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbPage>Início</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+    );
   }
 
   return (
@@ -52,26 +52,29 @@ export function DynamicBreadcrumb() {
           </BreadcrumbLink>
         </BreadcrumbItem>
         {segments.map((segment, index) => {
-           const isLast = index === segments.length - 1
-           const href = `/${segments.slice(0, index + 1).join('/')}`
-           const title = routeMap[segment] || segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, ' ')
+          const isLast = index === segments.length - 1;
+          const href = `/${segments.slice(0, index + 1).join("/")}`;
+          const title =
+            routeMap[segment] ||
+            segment.charAt(0).toUpperCase() +
+              segment.slice(1).replace(/-/g, " ");
 
-           return (
+          return (
             <React.Fragment key={href}>
-                 <BreadcrumbSeparator className="hidden md:block" />
-                 <BreadcrumbItem>
-                    {isLast ? (
-                        <BreadcrumbPage>{title}</BreadcrumbPage>
-                    ) : (
-                        <BreadcrumbLink asChild>
-                            <Link href={href}>{title}</Link>
-                        </BreadcrumbLink>
-                    )}
-                 </BreadcrumbItem>
+              <BreadcrumbSeparator className="hidden md:block" />
+              <BreadcrumbItem>
+                {isLast ? (
+                  <BreadcrumbPage>{title}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink asChild>
+                    <Link href={href}>{title}</Link>
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
             </React.Fragment>
-           )
+          );
         })}
       </BreadcrumbList>
     </Breadcrumb>
-  )
+  );
 }

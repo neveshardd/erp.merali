@@ -1,18 +1,10 @@
-"use client"
+"use client";
 
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import {
-  ChevronsUpDown,
-  LogOut,
-  Settings2,
-} from "lucide-react"
+import { ChevronsUpDown, LogOut, Settings2 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,47 +13,47 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
-import { signOut, useSession } from "@/lib/auth-client"
+} from "@/components/ui/sidebar";
+import { signOut, useSession } from "@/lib/auth-client";
 
 /**
  * Extrai as iniciais do nome do usuário (até 2 caracteres).
  * Ex: "Admin Merali" → "AM", "João" → "JO"
  */
 function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/)
+  const parts = name.trim().split(/\s+/);
   if (parts.length >= 2) {
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
-  return name.slice(0, 2).toUpperCase()
+  return name.slice(0, 2).toUpperCase();
 }
 
 export function NavUser() {
-  const { isMobile } = useSidebar()
-  const { data: session, isPending } = useSession()
-  const router = useRouter()
+  const { isMobile } = useSidebar();
+  const { data: session, isPending } = useSession();
+  const router = useRouter();
 
-  const user = session?.user
+  const user = session?.user;
 
-  const displayName = user?.name ?? "Usuário"
-  const displayEmail = user?.email ?? ""
-  const displayImage = user?.image ?? undefined
-  const initials = getInitials(displayName)
+  const displayName = user?.name ?? "Usuário";
+  const displayEmail = user?.email ?? "";
+  const displayImage = user?.image ?? undefined;
+  const initials = getInitials(displayName);
 
   async function handleLogout() {
     await signOut({
       fetchOptions: {
         onSuccess: () => {
-          router.push("/auth/signin")
+          router.push("/auth/signin");
         },
       },
-    })
+    });
   }
 
   if (isPending) {
@@ -77,7 +69,7 @@ export function NavUser() {
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
-    )
+    );
   }
 
   return (
@@ -140,5 +132,5 @@ export function NavUser() {
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }
