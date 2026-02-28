@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { createNotification } from "@/lib/notifications"
 
 export async function GET() {
   try {
@@ -26,6 +27,13 @@ export async function POST(request: Request) {
         status: body.status || "Novo",
         content: body.content || {},
       },
+    })
+
+    await createNotification({
+      title: "Novo Briefing Recebido",
+      description: `O cliente ${briefing.clientName} enviou um novo briefing para ${briefing.projectName}.`,
+      type: "info",
+      link: "/briefings"
     })
 
     return NextResponse.json(briefing, { status: 201 })

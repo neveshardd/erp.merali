@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { useParams } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import Link from "next/link"
@@ -98,22 +99,75 @@ export default function PublicInvoicePage() {
                         </div>
 
                         {/* Total Section */}
-                        <div className="p-8 bg-neutral-900 dark:bg-black rounded-[30px] text-white flex flex-col md:flex-row items-center justify-between gap-6 mb-10">
-                            <div className="flex flex-col gap-1">
-                                <span className="text-[9px] font-black uppercase opacity-40 tracking-widest text-center md:text-left">Valor Total</span>
-                                <span className="text-4xl font-black tabular-nums">
-                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(invoice.amount)}
-                                </span>
+                        <div className="bg-neutral-900 dark:bg-black rounded-[40px] p-10 text-white relative overflow-hidden mb-10 shadow-2xl">
+                            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                                <div className="flex flex-col gap-1 text-center md:text-left">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">Total a Pagar</span>
+                                    <span className="text-5xl font-black tabular-nums tracking-tighter">
+                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(invoice.amount)}
+                                    </span>
+                                </div>
+                                
+                                {!isPaid ? (
+                                    <Button 
+                                        onClick={handleCheckout}
+                                        className="h-16 px-10 bg-white text-neutral-900 hover:bg-neutral-100 font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl shadow-white/10 cursor-pointer w-full md:w-auto active:scale-95 transition-all"
+                                    >
+                                        <CreditCard className="w-5 h-5 mr-3" /> Pagar Agora
+                                    </Button>
+                                ) : (
+                                    <div className="flex flex-col items-center md:items-end gap-2">
+                                        <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500 rounded-full">
+                                            <CheckCircle2 className="w-4 h-4 text-white" />
+                                            <span className="text-[11px] font-black uppercase tracking-widest">Liquidado</span>
+                                        </div>
+                                        {invoice.paidAt && (
+                                            <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest">
+                                                Confirmado em {format(new Date(invoice.paidAt), "dd/MM/yyyy")}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
                             </div>
-                            {!isPaid && (
-                                <Button 
-                                    onClick={handleCheckout}
-                                    className="h-14 px-8 bg-white text-neutral-900 hover:bg-neutral-100 font-bold uppercase tracking-widest text-[11px] rounded-2xl shadow-xl shadow-white/5 cursor-pointer w-full md:w-auto"
-                                >
-                                    <CreditCard className="w-4 h-4 mr-2" /> Pagar Agora
-                                </Button>
-                            )}
+                            {/* Decorative element */}
+                            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-3xl" />
                         </div>
+
+                        {/* Payment Receipt / Comprovante */}
+                        {isPaid && invoice.paymentDetails && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mb-10 bg-neutral-50 dark:bg-neutral-800/30 rounded-[32px] p-8 border border-neutral-100 dark:border-neutral-800"
+                            >
+                                <div className="flex items-center gap-2 mb-6 text-neutral-400">
+                                    <ShieldCheck className="w-4 h-4 opacity-40" />
+                                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em]">Comprovante de Transação</h3>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-12">
+                                    <ReceiptItem label="Gateway" value={invoice.stripeId ? 'Stripe Payments' : 'Mercado Pago'} />
+                                    <ReceiptItem label="Método" value={invoice.paymentMethod?.split('_').join(' ') || 'Digital'} />
+                                    
+                                    {invoice.paymentDetails.installments && (
+                                        <ReceiptItem label="Parcelamento" value={`${invoice.paymentDetails.installments}x Sem Juros`} />
+                                    )}
+                                    
+                                    {invoice.paymentDetails.card && (
+                                        <ReceiptItem label="Cartão" value={`${invoice.paymentDetails.card.brand} •••• ${invoice.paymentDetails.card.last4 || invoice.paymentDetails.card.last_four_digits}`} />
+                                    )}
+
+                                    <div className="sm:col-span-2 pt-4 border-t border-neutral-200/50 dark:border-neutral-700/50">
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-tight">ID da Transação</span>
+                                            <span className="text-[10px] font-black text-neutral-900 dark:text-white tabular-nums bg-white dark:bg-neutral-800 px-3 py-1.5 rounded-lg border border-neutral-100 dark:border-neutral-700 w-full break-all">
+                                                {invoice.stripeId || invoice.mercadopagoId}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
 
                         {/* Security Footer */}
                         <div className="flex items-center justify-center gap-2 opacity-30">
@@ -131,5 +185,14 @@ export default function PublicInvoicePage() {
                 </div>
             </motion.div>
         </main>
+    )
+}
+
+function ReceiptItem({ label, value }: { label: string, value: string }) {
+    return (
+        <div className="flex flex-col gap-0.5">
+            <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-tight">{label}</span>
+            <span className="text-xs font-black uppercase text-neutral-900 dark:text-white truncate">{value}</span>
+        </div>
     )
 }

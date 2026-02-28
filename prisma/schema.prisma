@@ -261,20 +261,21 @@ enum PaymentMethod {
 }
 
 model Invoice {
-  id            String         @id @default(cuid())
-  budgetId      String?
-  budget        Budget?        @relation(fields: [budgetId], references: [id])
-  clientId      String
-  client        Client         @relation(fields: [clientId], references: [id])
-  amount        Float
-  status        InvoiceStatus  @default(PENDING)
-  dueDate       DateTime
-  paymentMethod PaymentMethod?
-  stripeId      String?        @unique // Stripe Invoice or Session ID
-  mercadopagoId String? // Mercado Pago Preference ID (last created)
-  paidAt        DateTime?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id             String         @id @default(cuid())
+  budgetId       String?
+  budget         Budget?        @relation(fields: [budgetId], references: [id])
+  clientId       String
+  client         Client         @relation(fields: [clientId], references: [id])
+  amount         Float
+  status         InvoiceStatus  @default(PENDING)
+  dueDate        DateTime
+  paymentMethod  PaymentMethod?
+  stripeId       String?        @unique // Stripe Invoice or Session ID
+  mercadopagoId  String? // Mercado Pago Preference ID (last created)
+  paymentDetails Json? // Store extra details like installments, card brand, etc.
+  paidAt         DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
   @@index([budgetId])
   @@index([clientId])
@@ -304,4 +305,17 @@ model Config {
 
   @@index([groupId])
   @@map("config")
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  type        String   @default("info") // success, warning, info, error
+  read        Boolean  @default(false)
+  link        String? // Optional link to navigate
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("notification")
 }

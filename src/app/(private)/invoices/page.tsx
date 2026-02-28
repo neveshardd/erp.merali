@@ -47,10 +47,12 @@ import { InvoiceModal } from "./invoice-modal"
 import { ConfirmModal } from "@/components/confirm-modal"
 import { PaymentMethodModal } from "./payment-method-modal"
 import { CopyLinkButton } from "./copy-link-button"
+import { InvoiceDetailModal } from "./invoice-detail-modal"
 
 export default function InvoicesPage() {
     const [searchQuery, setSearchQuery] = React.useState("")
     const [isModalOpen, setIsModalOpen] = React.useState(false)
+    const [detailModalOpen, setDetailModalOpen] = React.useState(false)
     const [selectedInvoice, setSelectedInvoice] = React.useState<any>(null)
     const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false)
     const [pendingDeleteId, setPendingDeleteId] = React.useState<string | null>(null)
@@ -251,7 +253,13 @@ export default function InvoicesPage() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="w-48 rounded-xl border-neutral-200 dark:border-neutral-800 p-1">
-                                                <DropdownMenuItem className="gap-2 font-bold uppercase tracking-widest text-[9px] cursor-pointer rounded-lg p-3">
+                                                <DropdownMenuItem 
+                                                    className="gap-2 font-bold uppercase tracking-widest text-[9px] cursor-pointer rounded-lg p-3"
+                                                    onClick={() => {
+                                                        setSelectedInvoice(i)
+                                                        setDetailModalOpen(true)
+                                                    }}
+                                                >
                                                     <FileText className="w-3.5 h-3.5" /> Ver Detalhes
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
@@ -276,6 +284,12 @@ export default function InvoicesPage() {
                 onOpenChange={setIsModalOpen} 
             />
 
+            <InvoiceDetailModal 
+                open={detailModalOpen}
+                onOpenChange={setDetailModalOpen}
+                invoice={selectedInvoice}
+            />
+
             <ConfirmModal 
                 open={confirmDeleteOpen}
                 onOpenChange={setConfirmDeleteOpen}
@@ -293,3 +307,4 @@ export default function InvoicesPage() {
         </main>
     )
 }
+

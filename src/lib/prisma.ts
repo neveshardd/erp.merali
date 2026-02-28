@@ -10,7 +10,7 @@ const adapter = new PrismaPg({ connectionString })
 
 // Function to check if the client is valid (has the required models)
 function isClientValid(client: any): boolean {
-    return !!(client && client.budget && client.invoice && client.configGroup && client.config)
+    return !!(client && client.budget && client.invoice && client.configGroup && client.config && client.notification)
 }
 
 // @ts-ignore
