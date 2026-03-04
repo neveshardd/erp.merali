@@ -1,6 +1,6 @@
 "use client";
 
-import { DollarSign, Info, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { DollarSign, Info, Loader2, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 import { ConfirmModal } from "@/components/confirm-modal";
@@ -65,7 +65,9 @@ export default function FixedCostsPage() {
   const monthlyHours = 160; // Valor fixo de referência
   const costPerHour = totalCost / monthlyHours;
 
-  if (isLoading) return <div className="p-6">Carregando custos...</div>;
+  if (isLoading) {
+    // Handling loading in table
+  }
 
   return (
     <main className="flex flex-col gap-8 p-6">
@@ -178,57 +180,78 @@ export default function FixedCostsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCosts.map((cost: any) => (
-                <TableRow
-                  key={cost.id}
-                  className="group hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors"
-                >
-                  <TableCell className="font-black text-xs uppercase text-neutral-900 dark:text-white py-4">
-                    {cost.description}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className="text-[9px] font-bold uppercase tracking-widest rounded-md px-2 py-0.5 bg-neutral-50 dark:bg-neutral-800/50"
-                    >
-                      {cost.category || "Geral"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-xs font-bold text-neutral-900 dark:text-white tabular-nums">
-                    {new Intl.NumberFormat("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                    }).format(cost.value)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge className="text-[9px] font-black uppercase tracking-widest rounded-full px-3 py-1 bg-emerald-500/10 text-emerald-600">
-                      Pago
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="w-8 h-8 text-neutral-400 hover:text-neutral-900 cursor-pointer"
-                        onClick={() => handleEdit(cost)}
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="w-8 h-8 text-neutral-400 hover:text-red-600 cursor-pointer"
-                        onClick={() => handleDelete(cost.id)}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-20 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin text-neutral-300" />
+                      <span className="font-bold uppercase tracking-widest text-[10px] text-neutral-400">
+                        Carregando custos...
+                      </span>
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filteredCosts.map((cost: any) => (
+                  <TableRow
+                    key={cost.id}
+                    className="group hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors"
+                  >
+                    <TableCell className="font-black text-xs uppercase text-neutral-900 dark:text-white py-4">
+                      {cost.description}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className="text-[9px] font-bold uppercase tracking-widest rounded-md px-2 py-0.5 bg-neutral-50 dark:bg-neutral-800/50"
+                      >
+                        {cost.category || "Geral"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs font-bold text-neutral-900 dark:text-white tabular-nums">
+                      {new Intl.NumberFormat("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      }).format(cost.value)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className="text-[9px] font-black uppercase tracking-widest rounded-full px-3 py-1 bg-emerald-500/10 text-emerald-600">
+                        Pago
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-8 h-8 text-neutral-400 hover:text-neutral-900 cursor-pointer"
+                          onClick={() => handleEdit(cost)}
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-8 h-8 text-neutral-400 hover:text-red-600 cursor-pointer"
+                          onClick={() => handleDelete(cost.id)}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
+          {!isLoading && filteredCosts.length === 0 && (
+            <div className="py-20 text-center text-neutral-500 flex flex-col items-center gap-2">
+              <Search className="w-8 h-8 opacity-20" />
+              <span className="font-bold uppercase tracking-widest text-[10px]">
+                Nenhum custo fixo encontrado
+              </span>
+            </div>
+          )}
         </Card>
       </div>
 

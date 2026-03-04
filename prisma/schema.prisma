@@ -81,6 +81,11 @@ enum BudgetStatus {
   CANCELLED
 }
 
+enum PaymentTerms {
+  HALF_HALF
+  FULL
+}
+
 enum ClientStatus {
   ACTIVE
   INACTIVE
@@ -151,6 +156,7 @@ model Budget {
   hourlyRate     Float          @default(0)
   profitMargin   Float          @default(20)
   multiplier     Float          @default(1.0)
+  paymentTerms   PaymentTerms   @default(HALF_HALF)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   variableCosts  VariableCost[]

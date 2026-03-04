@@ -44,9 +44,13 @@ export async function PATCH(
     const body = await request.json();
     const validatedData = budgetSchema.partial().parse(body);
 
+    const { clientId, ...data } = validatedData;
     const budget = await prisma.budget.update({
       where: { id },
-      data: validatedData,
+      data: {
+        ...data,
+        ...(clientId ? { client: { connect: { id: clientId } } } : {}),
+      },
       include: {
         client: true,
       },

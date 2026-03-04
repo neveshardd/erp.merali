@@ -10,6 +10,7 @@ import {
   DollarSign,
   FileText,
   Filter,
+  Loader2,
   MoreHorizontal,
   Plus,
   Search,
@@ -122,7 +123,7 @@ export default function InvoicesPage() {
   };
 
   if (isLoading) {
-    return <div className="p-8">Carregando...</div>;
+    // Keeping this section empty as we're handling loading in the table
   }
 
   return (
@@ -249,107 +250,127 @@ export default function InvoicesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredInvoices.map((i: any) => (
-              <TableRow
-                key={i.id}
-                className="group hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors"
-              >
-                <TableCell className="font-black text-xs uppercase text-neutral-900 dark:text-white py-4">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] text-neutral-400">
-                      #{i.id.slice(-6).toUpperCase()}
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="py-20 text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin text-neutral-300" />
+                    <span className="font-bold uppercase tracking-widest text-[10px] text-neutral-400">
+                      Carregando faturas...
                     </span>
-                    <span>{i.budget?.projectName || "Serviços"}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-xs font-bold text-neutral-500 uppercase">
-                  {i.client.name}
-                </TableCell>
-                <TableCell className="py-4">
-                  <div className="flex items-center gap-2 text-xs font-bold text-neutral-500 uppercase">
-                    <Calendar className="w-3.5 h-3.5 opacity-40" />
-                    {format(new Date(i.dueDate), "dd MMM yyyy", {
-                      locale: ptBR,
-                    })}
-                  </div>
-                </TableCell>
-                <TableCell className="text-right font-black text-xs text-neutral-900 dark:text-white">
-                  {new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  }).format(i.amount)}
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    className={`text-[9px] font-black uppercase tracking-widest rounded-full px-3 py-1 ${
-                      i.status === "PAID"
-                        ? "bg-emerald-500/10 text-emerald-600"
-                        : i.status === "PENDING"
-                          ? "bg-amber-500/10 text-amber-600"
-                          : "bg-neutral-100 text-neutral-500"
-                    }`}
-                  >
-                    {i.status === "PAID"
-                      ? "Pago"
-                      : i.status === "PENDING"
-                        ? "Pendente"
-                        : i.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-1">
-                    {i.status === "PENDING" && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="w-8 h-8 text-neutral-400 hover:text-blue-600 cursor-pointer"
-                          onClick={() => handleCheckout(i.id)}
-                          title="Abrir Checkout"
-                        >
-                          <CreditCard className="w-3.5 h-3.5" />
-                        </Button>
-                        <CopyLinkButton invoiceId={i.id} />
-                      </>
-                    )}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="w-8 h-8 text-neutral-400 cursor-pointer"
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        className="w-48 rounded-xl border-neutral-200 dark:border-neutral-800 p-1"
-                      >
-                        <DropdownMenuItem
-                          className="gap-2 font-bold uppercase tracking-widest text-[9px] cursor-pointer rounded-lg p-3"
-                          onClick={() => {
-                            setSelectedInvoice(i);
-                            setDetailModalOpen(true);
-                          }}
-                        >
-                          <FileText className="w-3.5 h-3.5" /> Ver Detalhes
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="gap-2 font-bold uppercase tracking-widest text-[9px] cursor-pointer rounded-lg p-3 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                          onClick={() => handleDelete(i.id)}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" /> Excluir Fatura
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              filteredInvoices.map((i: any) => (
+                <TableRow
+                  key={i.id}
+                  className="group hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors"
+                >
+                  <TableCell className="font-black text-xs uppercase text-neutral-900 dark:text-white py-4">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] text-neutral-400">
+                        #{i.id.slice(-6).toUpperCase()}
+                      </span>
+                      <span>{i.budget?.projectName || "Serviços"}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-xs font-bold text-neutral-500 uppercase">
+                    {i.client.name}
+                  </TableCell>
+                  <TableCell className="py-4">
+                    <div className="flex items-center gap-2 text-xs font-bold text-neutral-500 uppercase">
+                      <Calendar className="w-3.5 h-3.5 opacity-40" />
+                      {format(new Date(i.dueDate), "dd MMM yyyy", {
+                        locale: ptBR,
+                      })}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right font-black text-xs text-neutral-900 dark:text-white">
+                    {new Intl.NumberFormat("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    }).format(i.amount)}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      className={`text-[9px] font-black uppercase tracking-widest rounded-full px-3 py-1 ${i.status === "PAID"
+                          ? "bg-emerald-500/10 text-emerald-600"
+                          : i.status === "PENDING"
+                            ? "bg-amber-500/10 text-amber-600"
+                            : "bg-neutral-100 text-neutral-500"
+                        }`}
+                    >
+                      {i.status === "PAID"
+                        ? "Pago"
+                        : i.status === "PENDING"
+                          ? "Pendente"
+                          : i.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      {i.status === "PENDING" && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-8 h-8 text-neutral-400 hover:text-blue-600 cursor-pointer"
+                            onClick={() => handleCheckout(i.id)}
+                            title="Abrir Checkout"
+                          >
+                            <CreditCard className="w-3.5 h-3.5" />
+                          </Button>
+                          <CopyLinkButton invoiceId={i.id} />
+                        </>
+                      )}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-8 h-8 text-neutral-400 cursor-pointer"
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          className="w-48 rounded-xl border-neutral-200 dark:border-neutral-800 p-1"
+                        >
+                          <DropdownMenuItem
+                            className="gap-2 font-bold uppercase tracking-widest text-[9px] cursor-pointer rounded-lg p-3"
+                            onClick={() => {
+                              setSelectedInvoice(i);
+                              setDetailModalOpen(true);
+                            }}
+                          >
+                            <FileText className="w-3.5 h-3.5" /> Ver Detalhes
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="gap-2 font-bold uppercase tracking-widest text-[9px] cursor-pointer rounded-lg p-3 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            onClick={() => handleDelete(i.id)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> Excluir Fatura
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
+        {!isLoading && filteredInvoices.length === 0 && (
+          <div className="py-20 text-center text-neutral-500 flex flex-col items-center gap-2">
+            <Search className="w-8 h-8 opacity-20" />
+            <span className="font-bold uppercase tracking-widest text-[10px]">
+              Nenhuma fatura encontrada
+            </span>
+          </div>
+        )}
       </Card>
 
       <InvoiceModal open={isModalOpen} onOpenChange={setIsModalOpen} />

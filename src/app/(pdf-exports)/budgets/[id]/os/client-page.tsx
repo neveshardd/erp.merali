@@ -254,22 +254,20 @@ export default function ServiceOrderPage() {
                           className="flex items-center gap-2 group cursor-pointer hover:opacity-80 transition-opacity"
                         >
                           <div
-                            className={`w-4 h-4 border-2 rounded shrink-0 transition-colors flex items-center justify-center ${
-                              checkedSteps[item.id]?.[p]
+                            className={`w-4 h-4 border-2 rounded shrink-0 transition-colors flex items-center justify-center ${checkedSteps[item.id]?.[p]
                                 ? "bg-neutral-900 border-neutral-900"
                                 : "border-neutral-200"
-                            }`}
+                              }`}
                           >
                             {checkedSteps[item.id]?.[p] && (
                               <div className="w-1.5 h-1.5 bg-white rounded-full" />
                             )}
                           </div>
                           <span
-                            className={`text-[8px] font-black uppercase tracking-tighter ${
-                              checkedSteps[item.id]?.[p]
+                            className={`text-[8px] font-black uppercase tracking-tighter ${checkedSteps[item.id]?.[p]
                                 ? "text-neutral-900"
                                 : "text-neutral-400"
-                            }`}
+                              }`}
                           >
                             {p}
                           </span>
@@ -303,20 +301,18 @@ export default function ServiceOrderPage() {
                   className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
                 >
                   <div
-                    className={`w-4 h-4 border-2 rounded shrink-0 transition-colors flex items-center justify-center ${
-                      checkedQI[i]
+                    className={`w-4 h-4 border-2 rounded shrink-0 transition-colors flex items-center justify-center ${checkedQI[i]
                         ? "bg-neutral-900 border-neutral-900"
                         : "border-neutral-200"
-                    }`}
+                      }`}
                   >
                     {checkedQI[i] && (
                       <div className="w-1.5 h-1.5 bg-white rounded-full" />
                     )}
                   </div>
                   <span
-                    className={`text-[10px] font-bold uppercase tracking-tight transition-colors ${
-                      checkedQI[i] ? "text-neutral-900" : "text-neutral-600"
-                    }`}
+                    className={`text-[10px] font-bold uppercase tracking-tight transition-colors ${checkedQI[i] ? "text-neutral-900" : "text-neutral-600"
+                      }`}
                   >
                     {check}
                   </span>
@@ -360,7 +356,7 @@ export default function ServiceOrderPage() {
         <footer className="mt-12 pt-8 border-t border-neutral-100 flex justify-between items-center">
           <div className="flex flex-col gap-1">
             <span className="text-[8px] font-black text-neutral-400 uppercase tracking-[0.2em]">
-              Merali Studio | Internal Pipeline v2.0
+              {os.studio?.name || "Merali Studio"} | Internal Pipeline v2.0
             </span>
             <span className="text-[7px] text-neutral-300 uppercase font-medium">
               Este documento é de uso interno. Informações confidenciais.

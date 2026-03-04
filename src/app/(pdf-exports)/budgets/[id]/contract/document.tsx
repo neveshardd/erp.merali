@@ -135,6 +135,7 @@ interface ContractPDFProps {
       name: string;
       cnpj: string;
       address: string;
+      city: string;
       representative: string;
     };
     client: {
@@ -145,7 +146,8 @@ interface ContractPDFProps {
     };
     project: string;
     value: number;
-    deadline: string;
+    deadline: string | null;
+    paymentTerms: "HALF_HALF" | "FULL";
     installments: Array<{
       desc: string;
       value: number;
@@ -170,10 +172,9 @@ export function ContractPDFDocument({ data }: ContractPDFProps) {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>1. DAS PARTES</Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>CONTRATADA:</Text>{" "}
-              {data.contractor.name}, inscrita no CNPJ sob o nº{" "}
-              {data.contractor.cnpj}, com sede em {data.contractor.address},
-              neste ato representada por {data.contractor.representative}.
+              <Text style={styles.bold}>CONTRATADA:</Text> {data.contractor.name}
+              {data.contractor.cnpj ? `, inscrita no CNPJ sob o nº ${data.contractor.cnpj}` : ""}
+              , com sede em {data.contractor.address}, neste ato representada por {data.contractor.representative}.
             </Text>
             <Text style={styles.paragraph}>
               <Text style={styles.bold}>CONTRATANTE:</Text> {data.client.name},{" "}
@@ -201,7 +202,8 @@ export function ContractPDFDocument({ data }: ContractPDFProps) {
               A CONTRATADA compromete-se a entregar as imagens no prazo acordado
               de {data.deadline || "Prazo a definir"}, contados a partir do
               recebimento de todo o material técnico (modelos, referências,
-              plantas) e da confirmação do pagamento do sinal.
+              plantas) e da confirmação do pagamento{" "}
+              {data.paymentTerms === "HALF_HALF" ? "do sinal" : "integral"}.
             </Text>
           </View>
 
@@ -244,7 +246,7 @@ export function ContractPDFDocument({ data }: ContractPDFProps) {
             <Text style={styles.sectionTitle}>6. DO FORO</Text>
             <Text style={styles.paragraph}>
               Para dirimir quaisquer questões oriundas deste contrato, as partes
-              elegem o Foro da Comarca de São Paulo/SP, com renúncia a qualquer
+              elegem o Foro da Comarca de {data.contractor.city || "São Paulo/SP"}, com renúncia a qualquer
               outro, por mais privilegiado que seja.
             </Text>
           </View>
@@ -264,7 +266,9 @@ export function ContractPDFDocument({ data }: ContractPDFProps) {
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>São Paulo, {data.date}</Text>
+          <Text style={styles.footerText}>
+            {data.contractor.city || "São Paulo/SP"}, {data.date}
+          </Text>
           <Text style={styles.footerText}>Pág 01/01</Text>
         </View>
       </Page>

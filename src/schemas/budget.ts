@@ -11,7 +11,8 @@ export const budgetSchema = z.object({
   status: z
     .enum(["PENDING", "APPROVED", "IN_PROGRESS", "FINISHED", "CANCELLED"])
     .default("PENDING"),
-  totalValue: z.number().optional().default(0),
+  paymentTerms: z.enum(["HALF_HALF", "FULL"]).default("HALF_HALF"),
+  totalValue: z.number().optional(),
 });
 
 export type BudgetInput = z.infer<typeof budgetSchema>;

@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getStudioConfigs } from "@/lib/configs";
 
 export async function GET(
   _request: Request,
@@ -36,6 +37,8 @@ export async function GET(
     });
     const number = `OS-${format(budget.createdAt, "yyyy")}-${id.slice(-4).toUpperCase()}`;
 
+    const studio = await getStudioConfigs();
+
     return NextResponse.json({
       number,
       date: dateFormatted,
@@ -43,7 +46,8 @@ export async function GET(
       priority: budget.status === "APPROVED" ? "Normal" : "Alta",
       project: budget.projectName,
       client: budget.client.name,
-      manager: "Equipe Merali",
+      manager: studio.name,
+      studio,
       totalHours,
       items: budget.items.map((item, idx) => ({
         id: (idx + 1).toString().padStart(2, "0"),

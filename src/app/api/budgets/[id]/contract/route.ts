@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getStudioConfigs } from "@/lib/configs";
 
 export async function GET(
   _request: Request,
@@ -36,14 +37,17 @@ export async function GET(
     });
     const number = `CTR-${format(budget.createdAt, "yyyy")}-${id.slice(-4).toUpperCase()}`;
 
+    const studio = await getStudioConfigs();
+
     return NextResponse.json({
       number,
       date: dateFormatted,
       contractor: {
-        name: "MERALI STUDIO DE VISUALIZACAO LTDA",
-        cnpj: "50.123.456/0001-00",
-        address: "Rua Exemplo, 123 - São Paulo, SP",
-        representative: "Jose Eugenio Neves Nunes",
+        name: studio.name,
+        cnpj: studio.cnpj,
+        address: studio.address,
+        city: studio.city,
+        representative: studio.representative,
       },
       client: {
         name: budget.client.name,
@@ -53,14 +57,29 @@ export async function GET(
       },
       project: budget.projectName,
       value: total,
-      installments: [
-        { desc: "Entrada 50% (Sinal)", value: total * 0.5, date: "Aprovação" },
-        {
-          desc: "Entrega Final 50%",
-          value: total * 0.5,
-          date: budget.deadline || "A combinar",
-        },
-      ],
+      deadline: budget.deadline,
+      paymentTerms: (budget as any).paymentTerms,
+      installments:
+        (budget as any).paymentTerms === "FULL"
+          ? [
+            {
+              desc: "Valor Total À Vista",
+              value: total,
+              date: "Aprovação",
+            },
+          ]
+          : [
+            {
+              desc: "Entrada 50% (Sinal)",
+              value: total * 0.5,
+              date: "Aprovação",
+            },
+            {
+              desc: "Entrega Final 50%",
+              value: total * 0.5,
+              date: budget.deadline || "A combinar",
+            },
+          ],
     });
   } catch (error) {
     console.error("[CONTRACT_GET]", error);

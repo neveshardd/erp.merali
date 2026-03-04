@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getStudioConfigs } from "@/lib/configs";
 
 export async function GET(
   _request: Request,
@@ -43,6 +44,8 @@ export async function GET(
       locale: ptBR,
     });
 
+    const studio = await getStudioConfigs();
+
     return NextResponse.json({
       id: budget.id,
       code,
@@ -52,8 +55,10 @@ export async function GET(
       category: budget.category,
       deadline: budget.deadline,
       status: budget.status,
+      paymentTerms: (budget as any).paymentTerms,
       totalValue: budget.totalValue,
       clientTypeName: budget.clientTypeName,
+      studio,
       client: {
         name: budget.client.name,
         company: budget.client.company || "",

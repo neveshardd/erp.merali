@@ -330,6 +330,13 @@ export default function BudgetDetailsPage() {
                 },
                 { label: "Margem Lucro", value: `${rates.profitMargin}%` },
                 { label: "Multiplicador", value: `${rates.multiplier}x` },
+                {
+                  label: "Pagamento",
+                  value:
+                    (budget as any).paymentTerms === "FULL"
+                      ? "À Vista"
+                      : "50/50 Entrada",
+                },
               ].map((m, i) => (
                 <div key={i} className="flex flex-col gap-1">
                   <span className="text-[9px] uppercase font-black text-neutral-400 tracking-widest leading-none">
@@ -584,13 +591,12 @@ export default function BudgetDetailsPage() {
                     </TableCell>
                     <TableCell className="py-4">
                       <Badge
-                        className={`text-[9px] font-black uppercase tracking-widest rounded-full px-3 py-1 ${
-                          invoice.status === "PAID"
-                            ? "bg-emerald-500/10 text-emerald-600"
-                            : invoice.status === "PENDING"
-                              ? "bg-amber-500/10 text-amber-600"
-                              : "bg-neutral-100 text-neutral-500"
-                        }`}
+                        className={`text-[9px] font-black uppercase tracking-widest rounded-full px-3 py-1 ${invoice.status === "PAID"
+                          ? "bg-emerald-500/10 text-emerald-600"
+                          : invoice.status === "PENDING"
+                            ? "bg-amber-500/10 text-amber-600"
+                            : "bg-neutral-100 text-neutral-500"
+                          }`}
                       >
                         {invoice.status === "PAID"
                           ? "Pago"

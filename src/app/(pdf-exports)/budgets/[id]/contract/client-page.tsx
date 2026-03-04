@@ -156,8 +156,8 @@ export default function ContractPage() {
               A CONTRATADA compromete-se a entregar as imagens no prazo acordado
               de <strong>{contract.deadline || "Prazo a definir"}</strong>,
               contados a partir do recebimento de todo o material técnico
-              (modelos, referências, plantas) e da confirmação do pagamento do
-              sinal.
+              (modelos, referências, plantas) e da confirmação do pagamento{" "}
+              {contract.paymentTerms === "HALF_HALF" ? "do sinal" : "integral"}.
             </p>
           </section>
 

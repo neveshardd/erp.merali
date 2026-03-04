@@ -45,9 +45,11 @@ export async function POST(request: Request) {
     const calculatedHourlyRate =
       defaultBaseHours > 0 ? totalOperational / defaultBaseHours : 0;
 
+    const { clientId, ...data } = validatedData;
     const budget = await prisma.budget.create({
       data: {
-        ...validatedData,
+        ...data,
+        client: { connect: { id: clientId } },
         hourlyRate: calculatedHourlyRate,
         baseHours: defaultBaseHours,
       },

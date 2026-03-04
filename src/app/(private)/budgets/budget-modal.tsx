@@ -53,6 +53,7 @@ export function BudgetModal({ open, onOpenChange, budget }: BudgetModalProps) {
       category: "Residencial",
       deadline: "",
       status: "PENDING",
+      paymentTerms: "HALF_HALF",
       totalValue: 0,
     },
   });
@@ -66,6 +67,7 @@ export function BudgetModal({ open, onOpenChange, budget }: BudgetModalProps) {
         category: budget.category || "Residencial",
         deadline: budget.deadline || "",
         status: budget.status,
+        paymentTerms: budget.paymentTerms || "HALF_HALF",
         totalValue: budget.totalValue || 0,
       });
     } else {
@@ -76,13 +78,15 @@ export function BudgetModal({ open, onOpenChange, budget }: BudgetModalProps) {
         category: "Residencial",
         deadline: "",
         status: "PENDING",
+        paymentTerms: "HALF_HALF",
         totalValue: 0,
       });
     }
   }, [budget, reset]);
 
-  const onSubmit = async (data: BudgetInput) => {
+  const onSubmit = async (formData: BudgetInput) => {
     try {
+      const { totalValue, ...data } = formData;
       if (budget) {
         await updateMutation.mutateAsync({ id: budget.id, ...data });
         toast.success("Orçamento atualizado com sucesso!");
@@ -99,6 +103,7 @@ export function BudgetModal({ open, onOpenChange, budget }: BudgetModalProps) {
   const selectedClientId = watch("clientId");
   const selectedClientTypeName = watch("clientTypeName");
   const selectedCategory = watch("category");
+  const selectedPaymentTerms = watch("paymentTerms");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -260,6 +265,34 @@ export function BudgetModal({ open, onOpenChange, budget }: BudgetModalProps) {
                   className="h-12 rounded-xl bg-neutral-50 dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 tabular-nums font-bold"
                 />
               </div>
+            </div>
+
+            <div className="space-y-3">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-500">
+                Condição de Pagamento
+              </Label>
+              <Select
+                value={selectedPaymentTerms}
+                onValueChange={(value) => setValue("paymentTerms", value as any)}
+              >
+                <SelectTrigger className="h-12 rounded-xl bg-neutral-50 dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 font-bold">
+                  <SelectValue placeholder="Escolha a condição" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    value="HALF_HALF"
+                    className="font-bold uppercase text-[10px]"
+                  >
+                    50% Entrada / 50% Entrega
+                  </SelectItem>
+                  <SelectItem
+                    value="FULL"
+                    className="font-bold uppercase text-[10px]"
+                  >
+                    Valor Total à Vista
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {!budget && (

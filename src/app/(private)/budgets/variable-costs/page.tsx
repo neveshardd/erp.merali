@@ -5,6 +5,7 @@ import { ptBR } from "date-fns/locale";
 import {
   Archive,
   Layers,
+  Loader2,
   Pencil,
   Plus,
   Search,
@@ -173,55 +174,76 @@ export default function VariableCostsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCosts.map((cost: any) => (
-                <TableRow
-                  key={cost.id}
-                  className="group hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors"
-                >
-                  <TableCell className="font-black text-xs uppercase text-emerald-600 py-4 flex items-center gap-2">
-                    <div className="w-6 h-6 bg-emerald-50 dark:bg-emerald-900/20 rounded flex items-center justify-center">
-                      <Archive className="w-3 h-3" />
-                    </div>
-                    {cost.budget?.projectName || "Sem Projeto"}
-                  </TableCell>
-                  <TableCell className="text-xs font-bold text-neutral-900 dark:text-white uppercase tracking-tight">
-                    {cost.description}
-                  </TableCell>
-                  <TableCell className="text-xs font-bold text-neutral-500 uppercase tracking-widest tabular-nums">
-                    {format(new Date(cost.date), "dd/MM/yyyy", {
-                      locale: ptBR,
-                    })}
-                  </TableCell>
-                  <TableCell className="text-right text-xs font-black text-neutral-900 dark:text-white tabular-nums">
-                    {new Intl.NumberFormat("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                    }).format(cost.value)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="w-8 h-8 text-neutral-400 hover:text-neutral-900 cursor-pointer"
-                        onClick={() => handleEdit(cost)}
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="w-8 h-8 text-neutral-400 hover:text-red-600 cursor-pointer"
-                        onClick={() => handleDelete(cost.id)}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-20 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin text-neutral-300" />
+                      <span className="font-bold uppercase tracking-widest text-[10px] text-neutral-400">
+                        Carregando custos...
+                      </span>
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filteredCosts.map((cost: any) => (
+                  <TableRow
+                    key={cost.id}
+                    className="group hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors"
+                  >
+                    <TableCell className="font-black text-xs uppercase text-emerald-600 py-4 flex items-center gap-2">
+                      <div className="w-6 h-6 bg-emerald-50 dark:bg-emerald-900/20 rounded flex items-center justify-center">
+                        <Archive className="w-3 h-3" />
+                      </div>
+                      {cost.budget?.projectName || "Sem Projeto"}
+                    </TableCell>
+                    <TableCell className="text-xs font-bold text-neutral-900 dark:text-white uppercase tracking-tight">
+                      {cost.description}
+                    </TableCell>
+                    <TableCell className="text-xs font-bold text-neutral-500 uppercase tracking-widest tabular-nums">
+                      {format(new Date(cost.date), "dd/MM/yyyy", {
+                        locale: ptBR,
+                      })}
+                    </TableCell>
+                    <TableCell className="text-right text-xs font-black text-neutral-900 dark:text-white tabular-nums">
+                      {new Intl.NumberFormat("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      }).format(cost.value)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-8 h-8 text-neutral-400 hover:text-neutral-900 cursor-pointer"
+                          onClick={() => handleEdit(cost)}
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-8 h-8 text-neutral-400 hover:text-red-600 cursor-pointer"
+                          onClick={() => handleDelete(cost.id)}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
+          {!isLoading && filteredCosts.length === 0 && (
+            <div className="py-20 text-center text-neutral-500 flex flex-col items-center gap-2">
+              <Search className="w-8 h-8 opacity-20" />
+              <span className="font-bold uppercase tracking-widest text-[10px]">
+                Nenhum custo variável encontrado
+              </span>
+            </div>
+          )}
         </Card>
       </div>
 

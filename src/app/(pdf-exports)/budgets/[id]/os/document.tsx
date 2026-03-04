@@ -280,6 +280,11 @@ interface OSPDFProps {
       quantity: number;
       notes: string;
     }>;
+    studio?: {
+      name: string;
+      email: string;
+      phone: string;
+    };
   };
   checkedSteps?: Record<string, Record<string, boolean>>;
   checkedQI?: Record<number, boolean>;
@@ -373,9 +378,9 @@ export function ServiceOrderPDFDocument({
                           styles.checkSquare,
                           isChecked
                             ? {
-                                backgroundColor: "#171717",
-                                borderColor: "#171717",
-                              }
+                              backgroundColor: "#171717",
+                              borderColor: "#171717",
+                            }
                             : {},
                         ]}
                       />
@@ -462,7 +467,7 @@ export function ServiceOrderPDFDocument({
         <View style={styles.footer}>
           <View>
             <Text style={styles.footerText}>
-              Merali Studio | Internal Pipeline v2.0
+              {data.studio?.name || "Merali Studio"} | Internal Pipeline v2.0
             </Text>
             <Text
               style={[styles.footerText, { fontSize: 6, color: "#E5E5E5" }]}

@@ -7,6 +7,7 @@ import {
   Eye,
   FileText,
   Filter,
+  Loader2,
   Link as LinkIcon,
   Plus,
   Search,
@@ -158,76 +159,97 @@ export default function BriefingsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {technicalBriefings.map((b: any) => (
-                  <TableRow
-                    key={b.id}
-                    className="group hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors"
-                  >
-                    <TableCell className="font-black text-xs uppercase text-neutral-900 dark:text-white py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-50 dark:bg-blue-900/20 rounded flex items-center justify-center text-blue-600">
-                          <FileText className="w-4 h-4" />
-                        </div>
-                        {b.projectName}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-xs font-bold text-neutral-500 uppercase">
-                      {b.clientName}
-                    </TableCell>
-                    <TableCell className="text-xs font-bold text-neutral-500 uppercase">
-                      {format(new Date(b.createdAt), "dd/MM/yyyy", {
-                        locale: ptBR,
-                      })}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          b.status === "Respondido" ? "default" : "secondary"
-                        }
-                        className={`text-[9px] font-black uppercase tracking-widest rounded-full px-3 py-1 ${b.status === "Respondido" ? "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20" : "bg-neutral-100 text-neutral-500"}`}
-                      >
-                        {b.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="w-8 h-8 text-neutral-400 hover:text-neutral-900 cursor-pointer"
-                          onClick={() =>
-                            copyToClipboard(
-                              `https://merali.com/briefing/${b.id}`,
-                            )
-                          }
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="w-8 h-8 text-neutral-400 hover:text-neutral-900 cursor-pointer"
-                          onClick={() => {
-                            setSelectedBriefing(b);
-                            setIsDetailsOpen(true);
-                          }}
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="w-8 h-8 text-neutral-400 hover:text-red-600 cursor-pointer"
-                          onClick={() => handleDelete(b.id)}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-20 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="w-5 h-5 animate-spin text-neutral-300" />
+                        <span className="font-bold uppercase tracking-widest text-[10px] text-neutral-400">
+                          Carregando briefings...
+                        </span>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  technicalBriefings.map((b: any) => (
+                    <TableRow
+                      key={b.id}
+                      className="group hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors"
+                    >
+                      <TableCell className="font-black text-xs uppercase text-neutral-900 dark:text-white py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-blue-50 dark:bg-blue-900/20 rounded flex items-center justify-center text-blue-600">
+                            <FileText className="w-4 h-4" />
+                          </div>
+                          {b.projectName}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs font-bold text-neutral-500 uppercase">
+                        {b.clientName}
+                      </TableCell>
+                      <TableCell className="text-xs font-bold text-neutral-500 uppercase">
+                        {format(new Date(b.createdAt), "dd/MM/yyyy", {
+                          locale: ptBR,
+                        })}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            b.status === "Respondido" ? "default" : "secondary"
+                          }
+                          className={`text-[9px] font-black uppercase tracking-widest rounded-full px-3 py-1 ${b.status === "Respondido" ? "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20" : "bg-neutral-100 text-neutral-500"}`}
+                        >
+                          {b.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-8 h-8 text-neutral-400 hover:text-neutral-900 cursor-pointer"
+                            onClick={() =>
+                              copyToClipboard(
+                                `https://merali.com/briefing/${b.id}`,
+                              )
+                            }
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-8 h-8 text-neutral-400 hover:text-neutral-900 cursor-pointer"
+                            onClick={() => {
+                              setSelectedBriefing(b);
+                              setIsDetailsOpen(true);
+                            }}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-8 h-8 text-neutral-400 hover:text-red-600 cursor-pointer"
+                            onClick={() => handleDelete(b.id)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
+            {!isLoading && technicalBriefings.length === 0 && (
+              <div className="py-20 text-center text-neutral-500 flex flex-col items-center gap-2">
+                <Search className="w-8 h-8 opacity-20" />
+                <span className="font-bold uppercase tracking-widest text-[10px]">
+                  Nenhum briefing técnico encontrado
+                </span>
+              </div>
+            )}
           </Card>
         </TabsContent>
 
@@ -254,61 +276,82 @@ export default function BriefingsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {generalBriefings.map((b: any) => (
-                  <TableRow
-                    key={b.id}
-                    className="group hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors"
-                  >
-                    <TableCell className="font-black text-xs uppercase text-neutral-900 dark:text-white py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-purple-50 dark:bg-purple-900/20 rounded flex items-center justify-center text-purple-600">
-                          <User className="w-4 h-4" />
-                        </div>
-                        {b.clientName}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-xs font-bold text-neutral-500 lowercase">
-                      {b.email}
-                    </TableCell>
-                    <TableCell className="text-xs font-bold text-neutral-500 uppercase">
-                      {format(new Date(b.createdAt), "dd/MM/yyyy", {
-                        locale: ptBR,
-                      })}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={`text-[9px] font-black uppercase tracking-widest rounded-full px-3 py-1 ${b.status === "Novo" ? "bg-blue-500/10 text-blue-600" : "bg-emerald-500/10 text-emerald-600"}`}
-                      >
-                        {b.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="w-8 h-8 text-neutral-400 hover:text-neutral-900 cursor-pointer"
-                          onClick={() => {
-                            setSelectedBriefing(b);
-                            setIsDetailsOpen(true);
-                          }}
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="w-8 h-8 text-neutral-400 hover:text-red-600 cursor-pointer"
-                          onClick={() => handleDelete(b.id)}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-20 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="w-5 h-5 animate-spin text-neutral-300" />
+                        <span className="font-bold uppercase tracking-widest text-[10px] text-neutral-400">
+                          Carregando leads...
+                        </span>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  generalBriefings.map((b: any) => (
+                    <TableRow
+                      key={b.id}
+                      className="group hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors"
+                    >
+                      <TableCell className="font-black text-xs uppercase text-neutral-900 dark:text-white py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-purple-50 dark:bg-purple-900/20 rounded flex items-center justify-center text-purple-600">
+                            <User className="w-4 h-4" />
+                          </div>
+                          {b.clientName}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs font-bold text-neutral-500 lowercase">
+                        {b.email}
+                      </TableCell>
+                      <TableCell className="text-xs font-bold text-neutral-500 uppercase">
+                        {format(new Date(b.createdAt), "dd/MM/yyyy", {
+                          locale: ptBR,
+                        })}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={`text-[9px] font-black uppercase tracking-widest rounded-full px-3 py-1 ${b.status === "Novo" ? "bg-blue-500/10 text-blue-600" : "bg-emerald-500/10 text-emerald-600"}`}
+                        >
+                          {b.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-8 h-8 text-neutral-400 hover:text-neutral-900 cursor-pointer"
+                            onClick={() => {
+                              setSelectedBriefing(b);
+                              setIsDetailsOpen(true);
+                            }}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-8 h-8 text-neutral-400 hover:text-red-600 cursor-pointer"
+                            onClick={() => handleDelete(b.id)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
+            {!isLoading && generalBriefings.length === 0 && (
+              <div className="py-20 text-center text-neutral-500 flex flex-col items-center gap-2">
+                <Search className="w-8 h-8 opacity-20" />
+                <span className="font-bold uppercase tracking-widest text-[10px]">
+                  Nenhum lead encontrado
+                </span>
+              </div>
+            )}
           </Card>
         </TabsContent>
       </Tabs>

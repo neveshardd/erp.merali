@@ -166,46 +166,67 @@ export default function ClientTypesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredTypes.map((type: any) => (
-              <TableRow
-                key={type.id}
-                className="group hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors"
-              >
-                <TableCell className="py-4">
-                  <span className="text-xs font-black uppercase text-neutral-900 dark:text-white">
-                    {type.name}
-                  </span>
-                </TableCell>
-                <TableCell className="text-xs font-bold text-neutral-500 uppercase leading-relaxed max-w-[400px]">
-                  {type.description || "Sem descrição"}
-                </TableCell>
-                <TableCell className="text-center font-black tabular-nums text-emerald-500">
-                  {Number(type.multiplier).toFixed(2)}x
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="w-8 h-8 text-neutral-400 hover:text-neutral-900 cursor-pointer"
-                      onClick={() => handleEdit(type)}
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="w-8 h-8 text-neutral-400 hover:text-red-600 cursor-pointer"
-                      onClick={() => handleDelete(type.id)}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={4} className="py-20 text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin text-neutral-300" />
+                    <span className="font-bold uppercase tracking-widest text-[10px] text-neutral-400">
+                      Carregando tipos de clientes...
+                    </span>
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              filteredTypes.map((type: any) => (
+                <TableRow
+                  key={type.id}
+                  className="group hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors"
+                >
+                  <TableCell className="py-4">
+                    <span className="text-xs font-black uppercase text-neutral-900 dark:text-white">
+                      {type.name}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-xs font-bold text-neutral-500 uppercase leading-relaxed max-w-[400px]">
+                    {type.description || "Sem descrição"}
+                  </TableCell>
+                  <TableCell className="text-center font-black tabular-nums text-emerald-500">
+                    {Number(type.multiplier).toFixed(2)}x
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="w-8 h-8 text-neutral-400 hover:text-neutral-900 cursor-pointer"
+                        onClick={() => handleEdit(type)}
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="w-8 h-8 text-neutral-400 hover:text-red-600 cursor-pointer"
+                        onClick={() => handleDelete(type.id)}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
+        {!isLoading && filteredTypes.length === 0 && (
+          <div className="py-20 text-center text-neutral-500 flex flex-col items-center gap-2">
+            <Search className="w-8 h-8 opacity-20" />
+            <span className="font-bold uppercase tracking-widest text-[10px]">
+              Nenhum tipo de cliente encontrado
+            </span>
+          </div>
+        )}
       </Card>
 
       <ClientTypeModal

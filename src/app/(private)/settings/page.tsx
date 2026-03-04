@@ -13,13 +13,16 @@ export default function SettingsPage() {
   const { data: configGroups, isLoading } = useConfigs();
   const saveConfigs = useSaveConfigs();
 
-  type PortfolioConfigFields = {
-    heroTitle: string;
-    heroSubtitle: string;
-    manifestoTitle: string;
-    manifestoText: string;
-    contactEmail: string;
-    contactWhatsApp: string;
+  type StudioConfigFields = {
+    name: string;
+    cnpj: string;
+    email: string;
+    phone: string;
+    website: string;
+    address: string;
+    city: string;
+    representative: string;
+    terms: string;
   };
 
   type ErpPortfolioConfigFields = {
@@ -29,12 +32,34 @@ export default function SettingsPage() {
     manifestoTitle: string;
     manifestoText: string;
     footerText: string;
-    textCards: string[]; // Changed to array for CRUD
+    textCards: string[];
     contactEmail: string;
     contactPhone: string;
     instagram: string;
     website: string;
   };
+
+  type PortfolioConfigFields = {
+    heroTitle: string;
+    heroSubtitle: string;
+    manifestoTitle: string;
+    manifestoText: string;
+    contactEmail: string;
+    contactWhatsApp: string;
+  };
+
+  const [studioConfig, setStudioConfig] = React.useState<StudioConfigFields>({
+    name: "Merali Studio",
+    cnpj: "50.123.456/0001-00",
+    email: "contato@merali.com.br",
+    phone: "+55 61 99999-9999",
+    website: "www.merali.com.br",
+    address: "Endereço não cadastrado",
+    city: "São Paulo/SP",
+    representative: "Jose Eugenio Neves Nunes",
+    terms:
+      "Pagamento devido em até 7 dias após a emissão. Valores em atraso poderão sofrer multa de 2% e juros de 1% ao mês. Este orçamento é válido por 7 dias.",
+  });
 
   const [portfolioConfig, setPortfolioConfig] =
     React.useState<PortfolioConfigFields>({
@@ -43,7 +68,7 @@ export default function SettingsPage() {
         "Elevando projetos arquitetônicos ao patamar de obra de arte através do hiper-realismo extremo.",
       manifestoTitle: "Não entregamos imagens. Entregamos o amanhã.",
       manifestoText:
-        "A Merali Studio nasceu da obsessão pelo detalhe. Atuamos como um laboratório de luz e atmosfera, onde cada pixel é esculpido para criar a ilusão perfeita da realidade.",
+        "A Merali Studio nasceu da obsessão pelo detalhe. Atuamos como um laboratório de luz e atmosfera, onde cada pixel é esculpido para criar a ilusão perfeita da reality.",
       contactEmail: "contato@merali.com.br",
       contactWhatsApp: "+55 61 99999-9999",
     });
@@ -73,18 +98,34 @@ export default function SettingsPage() {
 
   React.useEffect(() => {
     if (configGroups) {
+      // Load Studio Info
+      const studioGroup = configGroups.find((g: any) => g.name === "studio");
+      if (studioGroup?.configs) {
+        setStudioConfig((prev) => {
+          const newConfig = { ...prev };
+          studioGroup.configs.forEach((c: any) => {
+            if (c.key in newConfig) {
+              (newConfig as any)[c.key] = c.value;
+            }
+          });
+          return newConfig;
+        });
+      }
+
       // Load Showcase Portfolio
       const portfolioGroup = configGroups.find(
         (g: any) => g.name === "portfolio",
       );
       if (portfolioGroup?.configs) {
-        const newConfig = { ...portfolioConfig };
-        portfolioGroup.configs.forEach((c: any) => {
-          if (c.key in newConfig) {
-            (newConfig as any)[c.key] = c.value;
-          }
+        setPortfolioConfig((prev) => {
+          const newConfig = { ...prev };
+          portfolioGroup.configs.forEach((c: any) => {
+            if (c.key in newConfig) {
+              (newConfig as any)[c.key] = c.value;
+            }
+          });
+          return newConfig;
         });
-        setPortfolioConfig(newConfig);
       }
 
       // Load ERP Portfolio
@@ -92,31 +133,47 @@ export default function SettingsPage() {
         (g: any) => g.name === "erp-portfolio",
       );
       if (erpPortfolioGroup?.configs) {
-        const newConfig = { ...erpPortfolioConfig };
-        erpPortfolioGroup.configs.forEach((c: any) => {
-          if (c.key in newConfig) {
-            if (c.key === "textCards") {
-              try {
-                // Try to parse as JSON first
-                newConfig.textCards = JSON.parse(c.value);
-              } catch {
-                // Fallback to newline split if it's not JSON
-                newConfig.textCards = c.value
-                  .split("\n")
-                  .filter((t: string) => t.trim().length > 0);
+        setErpPortfolioConfig((prev) => {
+          const newConfig = { ...prev };
+          erpPortfolioGroup.configs.forEach((c: any) => {
+            if (c.key in newConfig) {
+              if (c.key === "textCards") {
+                try {
+                  // Try to parse as JSON first
+                  newConfig.textCards = JSON.parse(c.value);
+                } catch {
+                  // Fallback to newline split if it's not JSON
+                  newConfig.textCards = c.value
+                    .split("\n")
+                    .filter((t: string) => t.trim().length > 0);
+                }
+              } else {
+                (newConfig as any)[c.key] = c.value;
               }
-            } else {
-              (newConfig as any)[c.key] = c.value;
             }
-          }
+          });
+          return newConfig;
         });
-        setErpPortfolioConfig(newConfig);
       }
     }
-  }, [configGroups, erpPortfolioConfig, portfolioConfig]);
+  }, [configGroups]);
 
   const handleSave = async () => {
     try {
+      // Save Studio Info
+      const studioConfigs = Object.entries(studioConfig).map(
+        ([key, value]) => ({
+          key,
+          value,
+          label: key,
+        }),
+      );
+
+      await saveConfigs.mutateAsync({
+        name: "studio",
+        configs: studioConfigs,
+      });
+
       // Save Showcase Portfolio
       const showcaseConfigs = Object.entries(portfolioConfig).map(
         ([key, value]) => ({
@@ -176,16 +233,24 @@ export default function SettingsPage() {
               Nome da Empresa
             </Label>
             <Input
-              defaultValue="STUDIO MERALI"
+              value={studioConfig.name}
+              onChange={(e) =>
+                setStudioConfig({ ...studioConfig, name: e.target.value })
+              }
+              placeholder="Ex: Merali Studio"
               className="h-10 bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 rounded-lg text-sm"
             />
           </div>
           <div className="space-y-2">
             <Label className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">
-              Logo URL (Ícone lateral)
+              CNPJ (Deixe vazio para não exibir)
             </Label>
             <Input
-              defaultValue="/logo.png"
+              value={studioConfig.cnpj}
+              onChange={(e) =>
+                setStudioConfig({ ...studioConfig, cnpj: e.target.value })
+              }
+              placeholder="00.000.000/0001-00"
               className="h-10 bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 rounded-lg text-sm"
             />
           </div>
@@ -194,7 +259,11 @@ export default function SettingsPage() {
               Email de Contato
             </Label>
             <Input
-              defaultValue="studio@merali.com.br"
+              value={studioConfig.email}
+              onChange={(e) =>
+                setStudioConfig({ ...studioConfig, email: e.target.value })
+              }
+              placeholder="studio@merali.com.br"
               className="h-10 bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 rounded-lg text-sm"
             />
           </div>
@@ -203,16 +272,66 @@ export default function SettingsPage() {
               Telefone/WhatsApp
             </Label>
             <Input
-              defaultValue="(61) 9 9998-6567"
+              value={studioConfig.phone}
+              onChange={(e) =>
+                setStudioConfig({ ...studioConfig, phone: e.target.value })
+              }
+              placeholder="(00) 0 0000-0000"
               className="h-10 bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 rounded-lg text-sm"
             />
           </div>
-          <div className="space-y-2 md:col-span-1">
+          <div className="space-y-2">
             <Label className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">
               Website
             </Label>
             <Input
-              defaultValue="www.merali.com.br"
+              value={studioConfig.website}
+              onChange={(e) =>
+                setStudioConfig({ ...studioConfig, website: e.target.value })
+              }
+              placeholder="www.merali.com.br"
+              className="h-10 bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 rounded-lg text-sm"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">
+              Endereço Completo
+            </Label>
+            <Input
+              value={studioConfig.address}
+              onChange={(e) =>
+                setStudioConfig({ ...studioConfig, address: e.target.value })
+              }
+              placeholder="Rua Exemplo, 123..."
+              className="h-10 bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 rounded-lg text-sm"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">
+              Cidade / UF (Para Contratos)
+            </Label>
+            <Input
+              value={studioConfig.city}
+              onChange={(e) =>
+                setStudioConfig({ ...studioConfig, city: e.target.value })
+              }
+              placeholder="Ex: São Paulo/SP"
+              className="h-10 bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 rounded-lg text-sm"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">
+              Representante Legal (Contratos)
+            </Label>
+            <Input
+              value={studioConfig.representative}
+              onChange={(e) =>
+                setStudioConfig({
+                  ...studioConfig,
+                  representative: e.target.value,
+                })
+              }
+              placeholder="Nome do Representante"
               className="h-10 bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 rounded-lg text-sm"
             />
           </div>
@@ -586,7 +705,10 @@ export default function SettingsPage() {
             Termos e Condições (Rodapé)
           </Label>
           <Textarea
-            defaultValue="Pagamento devido em até 7 dias após a emissão. Valores em atraso poderão sofrer multa de 2% e juros de 1% ao mês. Este orçamento é válido por 7 dias."
+            value={studioConfig.terms}
+            onChange={(e) =>
+              setStudioConfig({ ...studioConfig, terms: e.target.value })
+            }
             className="min-h-[100px] bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 rounded-lg p-4 text-xs font-medium leading-relaxed"
           />
         </div>

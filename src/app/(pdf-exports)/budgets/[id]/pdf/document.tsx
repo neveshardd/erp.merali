@@ -158,25 +158,25 @@ const styles = StyleSheet.create({
     gap: 40,
   },
   totalsBox: {
-    flex: 1,
     backgroundColor: "#171717",
-    padding: 20,
-    borderRadius: 12,
+    padding: 24,
+    borderRadius: 20,
     color: "#FFFFFF",
   },
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     borderBottom: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.1)",
-    paddingBottom: 8,
-    marginBottom: 8,
+    borderBottomColor: "rgba(255, 255, 255, 0.05)",
+    paddingBottom: 12,
+    marginBottom: 12,
   },
   totalLabel: {
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: "bold",
     textTransform: "uppercase",
-    color: "rgba(255, 255, 255, 0.5)",
+    color: "rgba(255, 255, 255, 0.4)",
+    letterSpacing: 0.5,
   },
   totalValue: {
     fontSize: 10,
@@ -189,13 +189,16 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   grandTotalLabel: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "bold",
     textTransform: "uppercase",
+    color: "#FFFFFF",
+    letterSpacing: 1.5,
   },
   grandTotalValue: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
+    color: "#FFFFFF",
   },
   observations: {
     flex: 1,
@@ -232,18 +235,27 @@ export function BudgetPDFDocument({ data }: { data: any }) {
   const total = subtotal + totalVariableCosts;
 
   // Payment schedule logic matching the preview
-  const paymentSchedule = [
-    {
-      description: "Entrada 50% (Sinal)",
-      value: total * 0.5,
-      date: "Aprovação",
-    },
-    {
-      description: "Entrega Final 50%",
-      value: total * 0.5,
-      date: data.deadline || "A combinar",
-    },
-  ];
+  const paymentSchedule =
+    data.paymentTerms === "FULL"
+      ? [
+        {
+          description: "Valor Total À Vista",
+          value: total,
+          date: "Aprovação",
+        },
+      ]
+      : [
+        {
+          description: "Entrada 50% (Sinal)",
+          value: total * 0.5,
+          date: "Aprovação",
+        },
+        {
+          description: "Entrega Final 50%",
+          value: total * 0.5,
+          date: data.deadline || "A combinar",
+        },
+      ];
 
   return (
     <Document>
@@ -254,13 +266,15 @@ export function BudgetPDFDocument({ data }: { data: any }) {
             <Image src="/logo.png" style={styles.logo} />
             <View style={{ marginTop: 10 }}>
               <Text style={[styles.label, { fontSize: 7, color: "#171717" }]}>
-                Merali Studio de Visualização
+                {data.studio?.name || "Merali Studio"}
               </Text>
+              {data.studio?.cnpj && (
+                <Text style={[styles.label, { fontSize: 6, color: "#737373" }]}>
+                  CNPJ: {data.studio.cnpj}
+                </Text>
+              )}
               <Text style={[styles.label, { fontSize: 6, color: "#737373" }]}>
-                CNPJ: 50.123.456/0001-00
-              </Text>
-              <Text style={[styles.label, { fontSize: 6, color: "#737373" }]}>
-                www.merali.com.br | contato@merali.com.br
+                {data.studio?.website || "www.merali.com.br"} | {data.studio?.email || "contato@merali.com.br"}
               </Text>
             </View>
           </View>
@@ -406,9 +420,7 @@ export function BudgetPDFDocument({ data }: { data: any }) {
             <View style={{ marginBottom: 15 }}>
               <Text style={styles.sectionTitle}>Observações</Text>
               <Text style={styles.obsText}>
-                O prazo de entrega inicia após a aprovação do orçamento e o
-                envio de todo o material técnico. Valores sujeitos a revisão
-                mediante alteração de escopo.
+                {data.studio?.terms || "O prazo de entrega inicia após a aprovação do orçamento e o envio de todo o material técnico. Valores sujeitos a revisão mediante alteração de escopo."}
               </Text>
             </View>
 
@@ -460,14 +472,14 @@ export function BudgetPDFDocument({ data }: { data: any }) {
           <View style={{ flex: 1 }}>
             <View style={styles.totalsBox}>
               <View style={styles.totalRow}>
-                <Text style={styles.totalLabel}>Subtotal</Text>
+                <Text style={styles.totalLabel}>Base do Projeto</Text>
                 <Text style={styles.totalValue}>
                   {formatCurrency(data.totalValue)}
                 </Text>
               </View>
               {totalVariableCosts > 0 && (
                 <View style={styles.totalRow}>
-                  <Text style={styles.totalLabel}>Custos Extras</Text>
+                  <Text style={styles.totalLabel}>Custos Adicionais</Text>
                   <Text style={styles.totalValue}>
                     {formatCurrency(totalVariableCosts)}
                   </Text>
@@ -475,7 +487,7 @@ export function BudgetPDFDocument({ data }: { data: any }) {
               )}
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabel}>Desconto</Text>
-                <Text style={[styles.totalValue, { color: "#4ADE80" }]}>
+                <Text style={[styles.totalValue, { color: "#10b981" }]}>
                   - R$ 0,00
                 </Text>
               </View>
@@ -506,7 +518,7 @@ export function BudgetPDFDocument({ data }: { data: any }) {
                   textTransform: "uppercase",
                 }}
               >
-                Merali Studio de Visualização
+                {data.studio?.name || "Merali Studio"}
               </Text>
               <Text
                 style={{

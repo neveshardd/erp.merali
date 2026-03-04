@@ -27,6 +27,7 @@ interface BudgetPDFData {
   category: string | null;
   deadline: string | null;
   status: string;
+  paymentTerms: "HALF_HALF" | "FULL";
   totalValue: number;
   clientTypeName: string;
   client: {
@@ -49,6 +50,16 @@ interface BudgetPDFData {
     value: number;
     date: string;
   }>;
+  studio?: {
+    name: string;
+    cnpj: string;
+    email: string;
+    phone: string;
+    website: string;
+    address: string;
+    representative: string;
+    terms: string;
+  };
 }
 
 import { BudgetPDFDocument } from "./document";
@@ -105,15 +116,18 @@ export default function BudgetPDFPage() {
   const subtotal = budget.totalValue;
   const total = subtotal + totalVariableCosts;
 
-  // Payment schedule: 50% on approval + 50% on delivery
-  const paymentSchedule = [
-    { description: "Entrada 50%", value: total * 0.5, date: "Aprovação" },
-    {
-      description: "Entrega Final 50%",
-      value: total * 0.5,
-      date: budget.deadline || "A combinar",
-    },
-  ];
+  // Payment schedule
+  const paymentSchedule =
+    budget.paymentTerms === "FULL"
+      ? [{ description: "Valor Total À Vista", value: total, date: "Aprovação" }]
+      : [
+        { description: "Entrada 50%", value: total * 0.5, date: "Aprovação" },
+        {
+          description: "Entrega Final 50%",
+          value: total * 0.5,
+          date: budget.deadline || "A combinar",
+        },
+      ];
 
   return (
     <div className="min-h-screen bg-neutral-100 dark:bg-neutral-950 p-4 md:p-8 pb-20 print:p-0 print:bg-white print:min-h-0">
@@ -154,7 +168,7 @@ export default function BudgetPDFPage() {
       {/* A4 Paper — this is the ref that gets captured for PDF */}
       <div
         ref={printRef}
-        className="max-w-[21cm] mx-auto bg-white shadow-2xl print:shadow-none min-h-[29.7cm] p-[1.5cm] flex flex-col gap-10 text-neutral-900 relative overflow-hidden"
+        className="max-w-[21cm] mx-auto bg-white shadow-2xl print:shadow-none min-h-[29.7cm] p-[1.5cm] flex flex-col gap-10 text-neutral-900 relative"
       >
         {/* Header Decoration */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-neutral-900/5 -rotate-45 translate-x-16 -translate-y-16" />
@@ -171,10 +185,10 @@ export default function BudgetPDFPage() {
             />
             <div className="flex flex-col gap-1">
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">
-                Merali Studio de Visualização
+                {budget.studio?.name || "Merali Studio"}
               </span>
               <span className="text-[9px] font-bold text-neutral-400">
-                www.merali.com.br | contato@merali.com.br
+                {budget.studio?.website || "www.merali.com.br"} | {budget.studio?.email || "contato@merali.com.br"}
               </span>
             </div>
           </div>
@@ -369,10 +383,8 @@ export default function BudgetPDFPage() {
             <h2 className="text-[10px] font-black uppercase tracking-widest text-neutral-300 border-b border-neutral-100 pb-2">
               Observações
             </h2>
-            <p className="text-[10px] font-bold text-neutral-500 uppercase leading-relaxed tracking-wider">
-              O prazo de entrega inicia após a aprovação do orçamento e o envio
-              de todo o material técnico necessário. Valores sujeitos a revisão
-              mediante alterações de escopo.
+            <p className="text-[9px] font-bold text-neutral-400 uppercase leading-relaxed text-justify">
+              {budget.studio?.terms || "O prazo de entrega inicia após a aprovação do orçamento e o envio de todo o material técnico. Valores sujeitos a revisão mediante alteração de escopo."}
             </p>
 
             <div className="mt-6 flex flex-col gap-4">
@@ -402,9 +414,9 @@ export default function BudgetPDFPage() {
 
           {/* Totals box */}
           <div className="flex flex-col">
-            <div className="flex flex-col gap-3 p-8 bg-neutral-900 text-white rounded-2xl">
-              <div className="flex justify-between items-center border-b border-white/10 pb-3">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">
+            <div className="flex flex-col gap-3 p-8 bg-neutral-900 text-white rounded-[20px]">
+              <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">
                   Base do Projeto
                 </span>
                 <span className="text-sm font-bold tabular-nums">
@@ -412,8 +424,8 @@ export default function BudgetPDFPage() {
                 </span>
               </div>
               {totalVariableCosts > 0 && (
-                <div className="flex justify-between items-center border-b border-white/10 pb-3">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">
+                <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">
                     Custos Adicionais
                   </span>
                   <span className="text-sm font-bold tabular-nums">
@@ -421,29 +433,29 @@ export default function BudgetPDFPage() {
                   </span>
                 </div>
               )}
-              <div className="flex justify-between items-center border-b border-white/10 pb-3">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">
+              <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">
                   Desconto
                 </span>
-                <span className="text-sm font-bold tabular-nums text-emerald-400">
+                <span className="text-sm font-bold tabular-nums text-emerald-500">
                   - R$ 0,00
                 </span>
               </div>
               <div className="flex justify-between items-center pt-2">
-                <span className="text-xs font-black uppercase tracking-[0.2em]">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">
                   Total
                 </span>
-                <span className="text-3xl font-black tabular-nums tracking-tighter">
+                <span className="text-4xl font-bold tabular-nums tracking-tighter text-white">
                   {formatCurrency(total)}
                 </span>
               </div>
             </div>
 
             {/* Signature */}
-            <div className="mt-12 flex flex-col items-center gap-2">
+            <div className="mt-12 flex flex-col items-center gap-2 text-center">
               <div className="w-full h-px bg-neutral-200" />
               <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">
-                Merali Studio | {budget.date}
+                {budget.studio?.name || "Merali Studio"} | {budget.date}
               </span>
             </div>
           </div>

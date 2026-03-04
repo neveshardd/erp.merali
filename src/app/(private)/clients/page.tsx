@@ -4,6 +4,7 @@ import {
   Briefcase,
   Building2,
   ExternalLink,
+  Loader2,
   Mail,
   MoreHorizontal,
   Pencil,
@@ -76,7 +77,10 @@ export default function ClientsPage() {
     }
   };
 
-  if (isLoading) return <div className="p-6">Carregando clientes...</div>;
+  if (isLoading) {
+    // Optionally return null or a skeleton if you want to keep the header visible.
+    // For now I'll just remove the early return to show the page structure.
+  }
   // Removed: if (error) return <div className="p-6">Erro ao carregar clientes.</div>
 
   return (
@@ -188,96 +192,117 @@ export default function ClientsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredClients.map((client: any) => (
-                <TableRow
-                  key={client.id}
-                  className="group hover:bg-neutral-100/50 dark:hover:bg-neutral-900/50 transition-colors"
-                >
-                  <TableCell className="py-4">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-xs font-black uppercase text-neutral-900 dark:text-white">
-                        {client.name}
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-20 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin text-neutral-300" />
+                      <span className="font-bold uppercase tracking-widest text-[10px] text-neutral-400">
+                        Carregando clientes...
                       </span>
-                      <Badge
-                        variant="outline"
-                        className="w-fit text-[8px] font-bold uppercase tracking-widest px-1.5 py-0 border-neutral-200 dark:border-neutral-700"
-                      >
-                        ID: {client.id.padStart(3, "0")}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-xs font-bold text-neutral-600 dark:text-neutral-300 uppercase">
-                        {client.company}
-                      </span>
-                      <span className="text-[9px] font-black text-neutral-400 uppercase tracking-widest">
-                        {client.type}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2 text-[10px] text-neutral-500">
-                        <Mail className="w-3 h-3" /> {client.email}
-                      </div>
-                      <div className="flex items-center gap-2 text-[10px] text-neutral-500">
-                        <Phone className="w-3 h-3" /> {client.phone}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center font-black tabular-nums text-neutral-900 dark:text-white">
-                    {client.projects}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="w-8 h-8 text-neutral-400 hover:text-neutral-900 cursor-pointer"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="w-8 h-8 text-neutral-400 hover:text-neutral-900 cursor-pointer"
-                          >
-                            <MoreHorizontal className="w-3.5 h-3.5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align="end"
-                          className="w-48 rounded-xl border-neutral-200 dark:border-neutral-800"
-                        >
-                          <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
-                            Opções do Cliente
-                          </DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-[10px] font-bold uppercase tracking-widest gap-2 cursor-pointer">
-                            <ExternalLink className="w-3.5 h-3.5" /> Ver
-                            Histórico
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-[10px] font-bold uppercase tracking-widest gap-2 cursor-pointer">
-                            <Plus className="w-3.5 h-3.5" /> Novo Projeto
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-[10px] font-bold uppercase tracking-widest gap-2 text-red-600 cursor-pointer"
-                            onClick={() => handleDelete(client.id)}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" /> Excluir Cliente
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filteredClients.map((client: any) => (
+                  <TableRow
+                    key={client.id}
+                    className="group hover:bg-neutral-100/50 dark:hover:bg-neutral-900/50 transition-colors"
+                  >
+                    <TableCell className="py-4">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-xs font-black uppercase text-neutral-900 dark:text-white">
+                          {client.name}
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className="w-fit text-[8px] font-bold uppercase tracking-widest px-1.5 py-0 border-neutral-200 dark:border-neutral-700"
+                        >
+                          ID: {client.id.padStart(3, "0")}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-xs font-bold text-neutral-600 dark:text-neutral-300 uppercase">
+                          {client.company}
+                        </span>
+                        <span className="text-[9px] font-black text-neutral-400 uppercase tracking-widest">
+                          {client.type}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2 text-[10px] text-neutral-500">
+                          <Mail className="w-3 h-3" /> {client.email}
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-neutral-500">
+                          <Phone className="w-3 h-3" /> {client.phone}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center font-black tabular-nums text-neutral-900 dark:text-white">
+                      {client.projects}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-8 h-8 text-neutral-400 hover:text-neutral-900 cursor-pointer"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="w-8 h-8 text-neutral-400 hover:text-neutral-900 cursor-pointer"
+                            >
+                              <MoreHorizontal className="w-3.5 h-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align="end"
+                            className="w-48 rounded-xl border-neutral-200 dark:border-neutral-800"
+                          >
+                            <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
+                              Opções do Cliente
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-[10px] font-bold uppercase tracking-widest gap-2 cursor-pointer">
+                              <ExternalLink className="w-3.5 h-3.5" /> Ver
+                              Histórico
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-[10px] font-bold uppercase tracking-widest gap-2 cursor-pointer">
+                              <Plus className="w-3.5 h-3.5" /> Novo Projeto
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-[10px] font-bold uppercase tracking-widest gap-2 text-red-600 cursor-pointer"
+                              onClick={() => handleDelete(client.id)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" /> Excluir Cliente
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
+          {!isLoading && filteredClients.length === 0 && (
+            <div className="py-20 text-center text-neutral-500 flex flex-col items-center gap-2">
+              <Search className="w-8 h-8 opacity-20" />
+              <span className="font-bold uppercase tracking-widest text-[10px]">
+                Nenhum cliente encontrado
+              </span>
+            </div>
+          )}
         </Card>
       </div>
 
