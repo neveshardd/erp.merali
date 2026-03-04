@@ -33,39 +33,39 @@ const METHODS: {
   color: string;
   bg: string;
 }[] = [
-  {
-    key: "pix",
-    label: "PIX",
-    sub: "Pagamento instantâneo",
-    icon: QrCode,
-    color: "text-emerald-600",
-    bg: "bg-emerald-50 dark:bg-emerald-900/20",
-  },
-  {
-    key: "card_installments",
-    label: "Cartão Parcelado",
-    sub: "Até 12x via Mercado Pago",
-    icon: CreditCard,
-    color: "text-blue-600",
-    bg: "bg-blue-50 dark:bg-blue-900/20",
-  },
-  {
-    key: "card",
-    label: "Cartão à Vista",
-    sub: "Crédito / Débito via Stripe",
-    icon: Landmark,
-    color: "text-violet-600",
-    bg: "bg-violet-50 dark:bg-violet-900/20",
-  },
-  {
-    key: "boleto",
-    label: "Boleto",
-    sub: "Vence em 3 dias úteis",
-    icon: Receipt,
-    color: "text-orange-600",
-    bg: "bg-orange-50 dark:bg-orange-900/20",
-  },
-];
+    {
+      key: "pix",
+      label: "PIX",
+      sub: "Pagamento instantâneo",
+      icon: QrCode,
+      color: "text-emerald-600",
+      bg: "bg-emerald-50 dark:bg-emerald-900/20",
+    },
+    {
+      key: "card_installments",
+      label: "Cartão Parcelado",
+      sub: "Até 12x via Mercado Pago",
+      icon: CreditCard,
+      color: "text-blue-600",
+      bg: "bg-blue-50 dark:bg-blue-900/20",
+    },
+    {
+      key: "card",
+      label: "Cartão à Vista",
+      sub: "Crédito / Débito via Stripe",
+      icon: Landmark,
+      color: "text-violet-600",
+      bg: "bg-violet-50 dark:bg-violet-900/20",
+    },
+    {
+      key: "boleto",
+      label: "Boleto",
+      sub: "Vence em 3 dias úteis",
+      icon: Receipt,
+      color: "text-orange-600",
+      bg: "bg-orange-50 dark:bg-orange-900/20",
+    },
+  ];
 
 export function CopyLinkButton({ invoiceId }: CopyLinkButtonProps) {
   const [loading, setLoading] = React.useState<PaymentMethod | null>(null);
@@ -87,7 +87,7 @@ export function CopyLinkButton({ invoiceId }: CopyLinkButtonProps) {
         setTimeout(() => setCopied(null), 2500);
       }
     } catch {
-      toast.error("Erro ao gerar link de pagamento.");
+      toast.error("Erro ao gerar link de pagamento!");
     } finally {
       setLoading(null);
     }
