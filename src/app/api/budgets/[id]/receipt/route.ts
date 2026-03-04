@@ -1,6 +1,5 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-// @ts-expect-error
 import extenso from "extenso";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";

@@ -1,6 +1,5 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-// @ts-expect-error
 import extenso from "extenso";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -67,8 +66,8 @@ export async function GET(
     });
     const paidAtFormatted = invoice.updatedAt
       ? format(new Date(invoice.updatedAt), "dd 'de' MMMM, yyyy", {
-          locale: ptBR,
-        })
+        locale: ptBR,
+      })
       : dateFormatted;
 
     const number = `REC-${format(new Date(), "yyyyMMdd")}-${id.slice(-4).toUpperCase()}`;

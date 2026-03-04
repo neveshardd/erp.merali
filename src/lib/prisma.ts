@@ -23,7 +23,6 @@ function isClientValid(client: any): boolean {
   );
 }
 
-// @ts-expect-error
 let prismaInstance: PrismaClient | undefined = globalForPrisma.prisma;
 
 // If in development and client is not valid, recreate it
