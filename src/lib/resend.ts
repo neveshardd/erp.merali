@@ -40,10 +40,14 @@ export async function sendEmail({ to, subject, react, templateId, data }: SendEm
 
         if (templateId && typeof templateId === "string" && templateId.length > 0) {
             // Use hosted template (Resend Dashboard)
-            console.log("[Resend] Template ID:", templateId);
-            console.log("[Resend] Template Data Payload:", JSON.stringify(data, null, 2));
-            options.templateId = templateId;
-            options.data = data || {};
+            console.log("[Resend] Using Template Object Structure for v6.x");
+            console.log("[Resend] ID:", templateId);
+            console.log("[Resend] Variables:", JSON.stringify(data, null, 2));
+
+            options.template = {
+                id: templateId,
+                variables: data || {},
+            };
         } else if (react) {
             // Fallback to local rendering
             console.log("[Resend] Pre-rendering component...");
