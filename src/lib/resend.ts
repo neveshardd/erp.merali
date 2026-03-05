@@ -38,7 +38,7 @@ export async function sendEmail({ to, subject, react, templateId, data }: SendEm
             },
         };
 
-        if (templateId) {
+        if (templateId && typeof templateId === "string" && templateId.length > 0) {
             // Use hosted template
             console.log("[Resend] Sending using Template ID:", templateId);
             options.template_id = templateId;
@@ -55,7 +55,9 @@ export async function sendEmail({ to, subject, react, templateId, data }: SendEm
             }
             options.html = htmlContent;
         } else {
-            throw new Error("Either 'react' or 'templateId' must be provided");
+            const errorMsg = "Missing both 'react' and 'templateId'. Check if your RESEND_TEMPLATE env variables are set correctly.";
+            console.error(`❌ ${errorMsg}`);
+            throw new Error(errorMsg);
         }
 
         const response = await resend.emails.send(options);
