@@ -26,11 +26,10 @@ export const NewInvoiceEmail = ({
         </p>
 
         <div style={{
-            padding: "32px",
+            padding: "40px",
             backgroundColor: "#050505",
-            borderRadius: "24px",
-            border: "1px solid #222",
-            marginBottom: "40px"
+            border: "1px solid #1a1a1a",
+            marginBottom: "60px"
         }}>
             <div style={{ marginBottom: "20px" }}>
                 <span style={{ fontSize: "10px", color: "#444", textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: "4px" }}>Valor Total</span>
@@ -44,14 +43,14 @@ export const NewInvoiceEmail = ({
 
         <div style={{ textAlign: "center" }}>
             <a href={paymentUrl} style={{
-                display: "inline-block",
+                display: "block",
                 backgroundColor: "#ffffff",
-                color: "#050505",
-                padding: "20px 48px",
-                borderRadius: "16px",
+                color: "#000000",
+                padding: "24px 48px",
                 textDecoration: "none",
-                fontWeight: "900",
-                fontSize: "12px",
+                fontWeight: "600",
+                fontSize: "14px",
+                textAlign: "center",
                 textTransform: "uppercase",
                 letterSpacing: "0.2em"
             }}>

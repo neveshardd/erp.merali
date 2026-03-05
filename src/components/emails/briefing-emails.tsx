@@ -19,33 +19,31 @@ export const NewBriefingAdminEmail = ({
         </p>
 
         <div style={{
-            padding: "32px",
+            padding: "40px",
             backgroundColor: "#050505",
-            borderRadius: "24px",
-            border: "1px solid #222",
-            marginBottom: "40px"
+            border: "1px solid #1a1a1a",
+            marginBottom: "60px"
         }}>
-            <p style={{ margin: "0 0 4px 0", fontSize: "10px", color: "#444", textTransform: "uppercase", letterSpacing: "0.1em" }}>Cliente</p>
-            <p style={{ margin: "0 0 20px 0", fontSize: "18px", fontWeight: "900", color: "#fff" }}>{clientName}</p>
+            <p style={{ margin: "0 0 8px 0", fontSize: "10px", color: "#666", textTransform: "uppercase", letterSpacing: "0.2em" }}>Cliente</p>
+            <p style={{ margin: "0 0 32px 0", fontSize: "20px", fontWeight: "500", color: "#ffffff" }}>{clientName}</p>
 
-            <p style={{ margin: "0 0 4px 0", fontSize: "10px", color: "#444", textTransform: "uppercase", letterSpacing: "0.1em" }}>Projeto</p>
-            <p style={{ margin: "0", fontSize: "18px", fontWeight: "900", color: "#fff" }}>{projectName}</p>
+            <p style={{ margin: "0 0 8px 0", fontSize: "10px", color: "#666", textTransform: "uppercase", letterSpacing: "0.2em" }}>Projeto</p>
+            <p style={{ margin: "0", fontSize: "20px", fontWeight: "500", color: "#ffffff" }}>{projectName}</p>
         </div>
 
         <div style={{ textAlign: "center" }}>
             <a href="https://erp.merali.com.br/briefings" style={{
-                display: "inline-block",
+                display: "block",
                 backgroundColor: "#ffffff",
-                color: "#050505",
-                padding: "20px 40px",
-                borderRadius: "16px",
+                color: "#000000",
+                padding: "24px 40px",
                 textDecoration: "none",
-                fontWeight: "900",
-                fontSize: "12px",
+                fontWeight: "600",
+                fontSize: "14px",
                 textTransform: "uppercase",
-                letterSpacing: "0.1em"
+                letterSpacing: "0.2em"
             }}>
-                Ver no Dashboard
+                Acessar Briefing
             </a>
         </div>
     </EmailLayout>

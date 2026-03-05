@@ -24,17 +24,16 @@ export const PaymentReceivedEmail = ({
         </p>
 
         <div style={{
-            padding: "40px",
-            backgroundColor: "#050505",
-            borderRadius: "24px",
+            padding: "60px 40px",
+            backgroundColor: "#000000",
             border: "1px solid #10b981",
             textAlign: "center",
-            marginBottom: "40px"
+            marginBottom: "60px"
         }}>
-            <span style={{ fontSize: "10px", color: "#10b981", textTransform: "uppercase", letterSpacing: "0.2em", display: "block", marginBottom: "8px" }}>
-                Valor Liquidado
+            <span style={{ fontSize: "10px", color: "#10b981", textTransform: "uppercase", letterSpacing: "0.4em", display: "block", marginBottom: "16px" }}>
+                PAGAMENTO CONFIRMADO
             </span>
-            <span style={{ fontSize: "40px", fontWeight: "900", color: "#ffffff" }}>
+            <span style={{ fontSize: "48px", fontWeight: "500", color: "#ffffff", letterSpacing: "-0.04em" }}>
                 {amount}
             </span>
         </div>

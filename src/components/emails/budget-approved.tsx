@@ -25,14 +25,13 @@ export const BudgetApprovedEmail = ({
         </p>
 
         <div style={{
-            padding: "24px",
+            padding: "32px",
             backgroundColor: "#10b981",
-            borderRadius: "16px",
             textAlign: "center",
-            marginBottom: "40px"
+            marginBottom: "60px"
         }}>
-            <p style={{ margin: "0", fontSize: "12px", fontWeight: "900", color: "#000", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                Próximo Passo: Início da Produção
+            <p style={{ margin: "0", fontSize: "14px", fontWeight: "600", color: "#000000", textTransform: "uppercase", letterSpacing: "0.2em" }}>
+                PRODUÇÃO INICIADA
             </p>
         </div>
 
