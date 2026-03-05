@@ -8,61 +8,78 @@ interface EmailTemplateProps {
 
 export const EmailLayout = ({ title, children }: EmailTemplateProps) => (
     <div style={{
-        backgroundColor: "#050505",
-        fontFamily: "Helvetica, Arial, sans-serif",
+        backgroundColor: "#000000",
+        fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
         margin: "0",
         padding: "0",
         color: "#ffffff",
         width: "100%",
     }}>
-        <table align="center" border={0} cellPadding="0" cellSpacing="0" width="100%" style={{ maxWidth: "600px", margin: "40px auto", backgroundColor: "#0f0f0f", borderRadius: "32px", overflow: "hidden", border: "1px solid #222" }}>
-            <tr>
-                <td style={{ padding: "60px 40px 40px", textAlign: "center" }}>
-                    <h1 style={{
-                        fontSize: "20px",
-                        fontWeight: "900",
-                        letterSpacing: "0.4em",
-                        textTransform: "uppercase",
-                        margin: "0",
-                        color: "#ffffff",
-                    }}>
-                        Merali<span style={{ color: "#444" }}>Studio</span>
-                    </h1>
-                </td>
-            </tr>
+        <table align="center" border={0} cellPadding="0" cellSpacing="0" width="100%" style={{ maxWidth: "600px", margin: "0 auto", backgroundColor: "#000000" }}>
+            {/* Header Padding */}
+            <tr><td style={{ height: "60px" }}></td></tr>
+
+            {/* Logo */}
             <tr>
                 <td style={{ padding: "0 40px" }}>
-                    <div style={{ height: "1px", backgroundColor: "#222" }}></div>
+                    <img
+                        src="https://erp.merali.com.br/logo.png"
+                        alt="Merali Studio"
+                        style={{ width: "40px", height: "40px", display: "block" }}
+                    />
                 </td>
             </tr>
+
+            {/* Separator / Top Spacing */}
+            <tr><td style={{ height: "60px" }}></td></tr>
+
+            {/* Content Area */}
             <tr>
-                <td style={{ padding: "60px 40px" }}>
+                <td style={{ padding: "0 40px" }}>
                     <h2 style={{
-                        fontSize: "42px",
-                        fontWeight: "900",
-                        letterSpacing: "-0.04em",
-                        textTransform: "uppercase",
-                        marginBottom: "32px",
-                        lineHeight: "0.9",
+                        fontSize: "36px",
+                        fontWeight: "500",
+                        letterSpacing: "-0.02em",
+                        lineHeight: "1.1",
+                        margin: "0 0 40px 0",
                         color: "#ffffff",
                     }}>
                         {title}
                     </h2>
 
-                    <div style={{ color: "#999", fontSize: "16px", lineHeight: "1.6" }}>
+                    <div style={{
+                        color: "#eeeeee",
+                        fontSize: "16px",
+                        lineHeight: "1.6",
+                        fontWeight: "400"
+                    }}>
                         {children}
                     </div>
+                </td>
+            </tr>
 
-                    <div style={{ marginTop: "60px", paddingTop: "40px", borderTop: "1px solid #222", fontSize: "10px", color: "#444", textAlign: "center", textTransform: "uppercase", letterSpacing: "0.2em" }}>
-                        Pure Visual Prestige.
+            {/* Footer Spacing */}
+            <tr><td style={{ height: "100px" }}></td></tr>
+
+            {/* Footer */}
+            <tr>
+                <td style={{
+                    padding: "40px",
+                    backgroundColor: "#050505",
+                    borderTop: "1px solid #1a1a1a"
+                }}>
+                    <div style={{ fontSize: "12px", color: "#666", lineHeight: "1.5" }}>
+                        <strong>Merali Studio</strong>
                         <br />
-                        <br />
-                        © 2026 Merali Studio.
+                        Design System for the Future.
+                        <br /><br />
+                        © 2026 Merali. Todos os direitos reservados.
                         <br />
                         Brasília, DF.
                     </div>
                 </td>
             </tr>
+            <tr><td style={{ height: "40px" }}></td></tr>
         </table>
-    </div>
+    </div >
 );

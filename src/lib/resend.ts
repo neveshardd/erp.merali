@@ -44,6 +44,11 @@ export async function sendEmail({ to, subject, react }: SendEmailParams) {
             to,
             subject,
             html: htmlContent,
+            // topic: Delivery optimization
+            headers: {
+                "Precedence": "bulk", // Paradoxically, 'bulk' is often safer for automated transactional mail
+                "X-Entity-Ref-ID": Math.random().toString(36).substring(7),
+            },
         });
 
         if (response.error) {
