@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin":
-    process.env.FRONTEND_URL || "http://localhost:3001",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-};
+import { corsHeaders } from "@/lib/cors";
 
 export async function OPTIONS(_request: Request) {
   return NextResponse.json({}, { headers: corsHeaders });
