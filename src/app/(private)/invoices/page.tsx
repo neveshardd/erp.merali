@@ -74,12 +74,13 @@ export default function InvoicesPage() {
     setPaymentModalOpen(true);
   };
 
-  const executeCheckout = async (gateway: "stripe" | "mercadopago") => {
+  const executeCheckout = async (gateway: "stripe" | "mercadopago", method?: string) => {
     if (!pendingCheckoutId) return;
     try {
       const data = await createCheckout.mutateAsync({
         id: pendingCheckoutId,
         gateway,
+        method,
       });
       if (data.url) {
         window.open(data.url, "_blank");

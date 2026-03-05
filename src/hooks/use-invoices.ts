@@ -63,12 +63,15 @@ export function useCreateCheckout() {
     mutationFn: async ({
       id,
       gateway,
+      method,
     }: {
       id: string;
       gateway: "stripe" | "mercadopago";
+      method?: string;
     }) => {
       const response = await axios.post(`/api/invoices/${id}/checkout`, {
         gateway,
+        method,
       });
       return response.data;
     },

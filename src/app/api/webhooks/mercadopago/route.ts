@@ -4,6 +4,8 @@ import { mpClient } from "@/lib/mercadopago";
 import { createNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
+import { sendEmail } from "@/lib/resend";
+import { PaymentReceivedEmail } from "@/components/emails/payment-received";
 
 export async function POST(request: Request) {
   try {
@@ -60,9 +62,9 @@ export async function POST(request: Request) {
                 installments: paymentData.installments,
                 card: paymentData.card
                   ? {
-                      last_four_digits: paymentData.card.last_four_digits,
-                      cardholder: paymentData.card.cardholder?.name,
-                    }
+                    last_four_digits: paymentData.card.last_four_digits,
+                    cardholder: paymentData.card.cardholder?.name,
+                  }
                   : null,
                 transaction_details: {
                   net_received_amount:
@@ -89,6 +91,23 @@ export async function POST(request: Request) {
             type: "success",
             link: `/invoices`,
           });
+
+          // topic: Send confirmation email to client
+          if (updatedInvoice?.client.email) {
+            try {
+              await sendEmail({
+                to: updatedInvoice.client.email,
+                subject: "Pagamento Confirmado - Merali Studio",
+                react: PaymentReceivedEmail({
+                  clientName: updatedInvoice.client.name,
+                  amount: formatCurrency(paymentData.transaction_amount!),
+                  invoiceId: updatedInvoice.id,
+                }),
+              });
+            } catch (emailErr) {
+              console.error("Non-fatal email error in MP webhook:", emailErr);
+            }
+          }
           break;
         }
 

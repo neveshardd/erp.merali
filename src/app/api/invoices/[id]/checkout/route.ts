@@ -1,4 +1,4 @@
-import { Preference } from "mercadopago";
+import { Preference, Payment } from "mercadopago";
 import { NextResponse } from "next/server";
 import { mpClient } from "@/lib/mercadopago";
 import { prisma } from "@/lib/prisma";
@@ -68,31 +68,52 @@ export async function POST(
     }
 
     // ── Mercado Pago ─────────────────────────────────────────────────────────────
+    if (method === "pix") {
+      const payment = new Payment(mpClient);
+      const paymentResponse = await payment.create({
+        body: {
+          transaction_amount: Number(invoice.amount),
+          description: itemTitle,
+          payment_method_id: "pix",
+          payer: {
+            email: invoice.client.email || "contato@merali.com.br",
+            first_name: invoice.client.name.split(" ")[0],
+            last_name: invoice.client.name.split(" ").slice(1).join(" ") || "Cliente",
+          },
+          metadata: { invoice_id: invoice.id },
+          external_reference: invoice.id,
+          notification_url: `${appUrl}/api/webhooks/mercadopago`,
+        },
+      });
+
+      await prisma.invoice.update({
+        where: { id: invoice.id },
+        data: { mercadopagoId: String(paymentResponse.id) },
+      });
+
+      return NextResponse.json({
+        url: paymentResponse.point_of_interaction?.transaction_data?.ticket_url
+      });
+    }
+
     // Handles: gateway='mercadopago', method='pix', method='card_installments'
     const excludedTypes: { id: string }[] =
-      method === "pix"
+      method === "card_installments"
         ? [
-            { id: "credit_card" },
-            { id: "debit_card" },
-            { id: "ticket" },
-            { id: "prepaid_card" },
-          ]
-        : method === "card_installments"
-          ? [
-              { id: "bank_transfer" }, // PIX
-              { id: "debit_card" },
-              { id: "ticket" },
-              { id: "prepaid_card" },
-            ]
-          : // legacy modal: PIX + credit card installments both allowed
-            [
-              { id: "ticket" },
-              { id: "atm" },
-              { id: "debit_card" },
-              { id: "prepaid_card" },
-            ];
+          { id: "bank_transfer" }, // PIX
+          { id: "debit_card" },
+          { id: "ticket" },
+          { id: "prepaid_card" },
+        ]
+        : // legacy modal: allow both
+        [
+          { id: "ticket" },
+          { id: "atm" },
+          { id: "debit_card" },
+          { id: "prepaid_card" },
+        ];
 
-    const maxInstallments = method === "pix" ? 1 : 12;
+    const maxInstallments = 12;
 
     const preference = new Preference(mpClient);
     const response = await preference.create({

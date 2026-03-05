@@ -12,7 +12,7 @@ import {
 interface PaymentMethodModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelect: (gateway: "stripe" | "mercadopago") => void;
+  onSelect: (gateway: "stripe" | "mercadopago", method?: string) => void;
   isLoading?: boolean;
 }
 
@@ -34,30 +34,11 @@ export function PaymentMethodModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="p-6 flex flex-col gap-4">
-          {/* Option Stripe */}
+        <div className="p-6 flex flex-col gap-3">
+          {/* Option PIX (Mercado Pago Direct) */}
           <button
             disabled={isLoading}
-            onClick={() => onSelect("stripe")}
-            className="group relative flex items-center gap-4 p-5 rounded-2xl border-2 border-neutral-100 dark:border-neutral-800 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-500/5 transition-all text-left cursor-pointer disabled:opacity-50"
-          >
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0 group-hover:scale-110 transition-transform">
-              <CreditCard className="w-6 h-6" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-black uppercase text-neutral-900 dark:text-white">
-                Stripe
-              </span>
-              <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">
-                Cartão à vista • Boleto • Débito
-              </span>
-            </div>
-          </button>
-
-          {/* Option Mercado Pago */}
-          <button
-            disabled={isLoading}
-            onClick={() => onSelect("mercadopago")}
+            onClick={() => onSelect("mercadopago", "pix")}
             className="group relative flex items-center gap-4 p-5 rounded-2xl border-2 border-neutral-100 dark:border-neutral-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/5 transition-all text-left cursor-pointer disabled:opacity-50"
           >
             <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 group-hover:scale-110 transition-transform">
@@ -65,10 +46,48 @@ export function PaymentMethodModal({
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-black uppercase text-neutral-900 dark:text-white">
-                Mercado Pago
+                PIX Instantâneo
               </span>
               <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">
-                PIX • Cartão Parcelado (até 12x)
+                Liberação imediata • QR Code & Copia e Cola
+              </span>
+            </div>
+          </button>
+
+          {/* Option Stripe - Card/Boleto */}
+          <button
+            disabled={isLoading}
+            onClick={() => onSelect("stripe", "card")}
+            className="group relative flex items-center gap-4 p-5 rounded-2xl border-2 border-neutral-100 dark:border-neutral-800 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-500/5 transition-all text-left cursor-pointer disabled:opacity-50"
+          >
+            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0 group-hover:scale-110 transition-transform">
+              <CreditCard className="w-6 h-6" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-black uppercase text-neutral-900 dark:text-white">
+                Cartão à vista ou Boleto
+              </span>
+              <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">
+                Processado via Stripe • Seguro & Rápido
+              </span>
+            </div>
+          </button>
+
+          {/* Option Mercado Pago - Installments */}
+          <button
+            disabled={isLoading}
+            onClick={() => onSelect("mercadopago", "card_installments")}
+            className="group relative flex items-center gap-4 p-5 rounded-2xl border-2 border-neutral-100 dark:border-neutral-800 hover:border-blue-600 dark:hover:border-blue-600 hover:bg-blue-50/50 dark:hover:bg-blue-600/5 transition-all text-left cursor-pointer disabled:opacity-50"
+          >
+            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/10 rounded-xl flex items-center justify-center text-blue-700 dark:text-blue-400 shrink-0 group-hover:scale-110 transition-transform">
+              <CreditCard className="w-6 h-6" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-black uppercase text-neutral-900 dark:text-white">
+                Parcelado (até 12x)
+              </span>
+              <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">
+                Mercado Pago • Com ou sem juros
               </span>
             </div>
           </button>
