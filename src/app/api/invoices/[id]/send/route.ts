@@ -34,19 +34,15 @@ export async function POST(
         // to send them to the ERP dashboard where they can choose.
         // Actually, I'll create a session on the fly here to get a fresh URL.
 
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://erp.merali.com.br";
-        const paymentUrl = `${baseUrl}/pay/${invoice.id}`; // If you have a public pay page, otherwise use checkout API directly
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL?.includes("localhost")
+            ? "https://erp.merali.com.br"
+            : (process.env.NEXT_PUBLIC_APP_URL || "https://erp.merali.com.br");
 
-        // Alternative: Let's use the actual checkout API internally
-        const { data: checkoutData } = await (await fetch(`${baseUrl}/api/invoices/${id}/checkout`, {
-            method: "POST",
-            body: JSON.stringify({ gateway: "stripe" }), // Default to stripe for the email link
-            headers: { "Content-Type": "application/json" }
-        })).json();
+        const finalPaymentUrl = `${baseUrl}/pay/${invoice.id}`;
 
-        const finalPaymentUrl = checkoutData?.url || paymentUrl;
+        console.log(`[Email] Sending invoice to ${invoice.client.email} with link: ${finalPaymentUrl}`);
 
-        await sendEmail({
+        const emailResult = await sendEmail({
             to: invoice.client.email,
             subject: `Fatura em Aberto - Merali Studio`,
             react: NewInvoiceEmail({
@@ -57,9 +53,16 @@ export async function POST(
             }),
         });
 
+        if (!emailResult) {
+            throw new Error("Resend failed to return success");
+        }
+
         return NextResponse.json({ success: true });
-    } catch (error) {
-        console.error("Error sending invoice email:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    } catch (error: any) {
+        console.error("❌ Fatal Error in invoice send route:", error.message || error);
+        return NextResponse.json(
+            { error: error.message || "Internal Server Error" },
+            { status: 500 }
+        );
     }
 }
