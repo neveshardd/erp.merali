@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Mail, Phone, Save, UserPlus } from "lucide-react";
+import * as React from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,16 +15,21 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useCreateClient } from "@/hooks/use-clients";
+import { useCreateClient, useUpdateClient } from "@/hooks/use-clients";
 import { type ClientInput, clientSchema } from "@/schemas/client";
 
 interface ClientModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialData?: any; // To support editing
 }
 
-export function ClientModal({ open, onOpenChange }: ClientModalProps) {
-  const { mutate: createClient, isPending } = useCreateClient();
+export function ClientModal({ open, onOpenChange, initialData }: ClientModalProps) {
+  const { mutate: createClient, isPending: isCreating } = useCreateClient();
+  const { mutate: updateClient, isPending: isUpdating } = useUpdateClient();
+
+  const isPending = isCreating || isUpdating;
+  const isEditing = !!initialData;
 
   const {
     register,
@@ -41,13 +47,46 @@ export function ClientModal({ open, onOpenChange }: ClientModalProps) {
     },
   });
 
+  // Populate form when editing
+  React.useEffect(() => {
+    if (initialData && open) {
+      reset({
+        name: initialData.name,
+        company: initialData.company || "",
+        taxId: initialData.taxId || "",
+        email: initialData.email || "",
+        phone: initialData.phone || "",
+      });
+    } else if (open) {
+      reset({
+        name: "",
+        company: "",
+        taxId: "",
+        email: "",
+        phone: "",
+      });
+    }
+  }, [initialData, open, reset]);
+
   const onSubmit = (data: ClientInput) => {
-    createClient(data, {
-      onSuccess: () => {
-        onOpenChange(false);
-        reset();
-      },
-    });
+    if (isEditing && initialData.id) {
+      updateClient(
+        { id: initialData.id, data },
+        {
+          onSuccess: () => {
+            onOpenChange(false);
+            reset();
+          },
+        }
+      );
+    } else {
+      createClient(data, {
+        onSuccess: () => {
+          onOpenChange(false);
+          reset();
+        },
+      });
+    }
   };
 
   return (
@@ -66,10 +105,10 @@ export function ClientModal({ open, onOpenChange }: ClientModalProps) {
             </div>
             <div>
               <DialogTitle className="text-xl font-black uppercase tracking-tighter">
-                Cadastrar Novo Cliente
+                {isEditing ? "Editar Cliente" : "Cadastrar Novo Cliente"}
               </DialogTitle>
               <DialogDescription className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">
-                Adicionar novo contato à base
+                {isEditing ? "Atualizar informações do contato" : "Adicionar novo contato à base"}
               </DialogDescription>
             </div>
           </div>
@@ -166,7 +205,7 @@ export function ClientModal({ open, onOpenChange }: ClientModalProps) {
               className="flex-1 gap-2 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-[10px] h-12 rounded-xl transition-all active:scale-95 cursor-pointer shadow-xl shadow-blue-500/10"
             >
               <Save className="w-4 h-4" />{" "}
-              {isPending ? "Salvando..." : "Finalizar Cadastro"}
+              {isPending ? "Salvando..." : isEditing ? "Salvar Alterações" : "Finalizar Cadastro"}
             </Button>
           </DialogFooter>
         </form>

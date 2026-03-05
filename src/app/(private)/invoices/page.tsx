@@ -63,6 +63,7 @@ export default function InvoicesPage() {
   const [pendingCheckoutId, setPendingCheckoutId] = React.useState<
     string | null
   >(null);
+  const [statusFilter, setStatusFilter] = React.useState<string>("ALL");
 
   const { data: invoices = [], isLoading } = useInvoices();
   const deleteInvoice = useDeleteInvoice();
@@ -120,14 +121,18 @@ export default function InvoicesPage() {
     }
   };
 
-  const filteredInvoices = invoices.filter(
-    (i: any) =>
+  const filteredInvoices = invoices.filter((i: any) => {
+    const matchesSearch =
       i.client?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       i.budget?.projectName
         ?.toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
-      i.id.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+      i.id.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesStatus = statusFilter === "ALL" || i.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
 
   const stats = {
     total: invoices.reduce((acc: number, curr: any) => acc + curr.amount, 0),
@@ -234,12 +239,24 @@ export default function InvoicesPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <Button
-          variant="outline"
-          className="h-12 gap-2 font-bold uppercase tracking-widest text-[10px] rounded-xl border-neutral-200 shadow-none px-6"
-        >
-          <Filter className="w-4 h-4" /> Filtros
-        </Button>
+        <div className="flex bg-neutral-100 dark:bg-neutral-900 p-1 rounded-xl gap-1">
+          {[
+            { id: "ALL", label: "Todos" },
+            { id: "PENDING", label: "Pendentes" },
+            { id: "PAID", label: "Pagos" },
+          ].map((status) => (
+            <button
+              key={status.id}
+              onClick={() => setStatusFilter(status.id)}
+              className={`h-10 px-6 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${statusFilter === status.id
+                ? "bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-sm"
+                : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"
+                }`}
+            >
+              {status.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <Card className="border-neutral-200 dark:border-neutral-800 shadow-none rounded-2xl overflow-hidden">

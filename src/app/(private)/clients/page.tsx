@@ -43,6 +43,7 @@ import { ClientModal } from "./client-modal";
 export default function ClientsPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [selectedClient, setSelectedClient] = React.useState<any>(null);
   const [pendingDeleteId, setPendingDeleteId] = React.useState<string | null>(
     null,
   ); // Added
@@ -58,6 +59,16 @@ export default function ClientsPage() {
       client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (client.company || "").toLowerCase().includes(searchQuery.toLowerCase()), // Modified: c.company to client.company
   );
+
+  const handleEdit = (client: any) => {
+    setSelectedClient(client);
+    setIsModalOpen(true);
+  };
+
+  const handleCreate = () => {
+    setSelectedClient(null);
+    setIsModalOpen(true);
+  };
 
   // Added handleDelete function
   const handleDelete = (id: string) => {
@@ -96,7 +107,7 @@ export default function ClientsPage() {
           </p>
         </div>
         <Button
-          onClick={() => setIsModalOpen(true)}
+          onClick={handleCreate}
           className="gap-2 bg-neutral-900 dark:bg-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-200 text-white font-black uppercase tracking-widest text-[10px] h-10 px-6 rounded-xl transition-all active:scale-95 cursor-pointer shadow-none"
         >
           <Plus className="w-4 h-4" /> Novo Cliente
@@ -251,6 +262,7 @@ export default function ClientsPage() {
                           variant="ghost"
                           size="icon"
                           className="w-8 h-8 text-neutral-400 hover:text-neutral-900 cursor-pointer"
+                          onClick={() => handleEdit(client)}
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </Button>
@@ -306,7 +318,11 @@ export default function ClientsPage() {
         </Card>
       </div>
 
-      <ClientModal open={isModalOpen} onOpenChange={setIsModalOpen} />
+      <ClientModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        initialData={selectedClient}
+      />
 
       <ConfirmModal
         open={confirmDeleteOpen}

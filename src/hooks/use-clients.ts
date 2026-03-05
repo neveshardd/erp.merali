@@ -39,3 +39,17 @@ export function useDeleteClient() {
     },
   });
 }
+
+export function useUpdateClient() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<ClientInput> }) => {
+      const response = await axios.patch(`/api/clients/${id}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+    },
+  });
+}
