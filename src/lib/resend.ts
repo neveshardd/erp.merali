@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import * as React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 
 export const EMAIL_FROM = "Merali Studio <contato@merali.com.br>";
 
@@ -27,13 +28,22 @@ export async function sendEmail({ to, subject, react }: SendEmailParams) {
     const resend = new Resend(apiKey);
 
     try {
-        console.log("[Resend] Sending request...");
+        console.log("[Resend] Pre-rendering component...");
+
+        let htmlContent: string;
+        if (typeof react === "string") {
+            htmlContent = react;
+        } else {
+            // Manual rendering to HTML to avoid Vercel minification issues with "react" property
+            htmlContent = renderToStaticMarkup(react);
+        }
+
+        console.log("[Resend] Sending request with rendered HTML...");
         const response = await resend.emails.send({
             from: EMAIL_FROM,
             to,
             subject,
-            react: typeof react === "string" ? undefined : react,
-            html: typeof react === "string" ? react : undefined,
+            html: htmlContent,
         });
 
         if (response.error) {
