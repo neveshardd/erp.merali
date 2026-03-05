@@ -45,12 +45,13 @@ export async function POST(
         const emailResult = await sendEmail({
             to: invoice.client.email,
             subject: `Fatura em Aberto - Merali Studio`,
-            react: NewInvoiceEmail({
+            templateId: process.env.RESEND_TEMPLATE_INVOICE,
+            data: {
                 clientName: invoice.client.name,
                 amount: formatCurrency(invoice.amount),
                 dueDate: format(new Date(invoice.dueDate), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
                 paymentUrl: finalPaymentUrl,
-            }),
+            },
         });
 
         if (!emailResult) {

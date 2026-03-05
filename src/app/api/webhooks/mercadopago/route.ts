@@ -98,11 +98,12 @@ export async function POST(request: Request) {
               await sendEmail({
                 to: updatedInvoice.client.email,
                 subject: "Pagamento Confirmado - Merali Studio",
-                react: PaymentReceivedEmail({
+                templateId: process.env.RESEND_TEMPLATE_PAYMENT,
+                data: {
                   clientName: updatedInvoice.client.name,
-                  amount: formatCurrency(paymentData.transaction_amount!),
                   invoiceId: updatedInvoice.id,
-                }),
+                  amount: formatCurrency(paymentData.transaction_amount!),
+                },
               });
             } catch (emailErr) {
               console.error("Non-fatal email error in MP webhook:", emailErr);

@@ -70,10 +70,11 @@ export async function PATCH(
         await sendEmail({
           to: budget.client.email,
           subject: "Seu Projeto foi Aprovado! - Merali Studio",
-          react: BudgetApprovedEmail({
+          templateId: process.env.RESEND_TEMPLATE_PROJECT_STARTED,
+          data: {
             clientName: budget.client.name,
             projectName: budget.projectName,
-          }),
+          },
         });
       } catch (emailErr) {
         console.error("Non-fatal budget email error:", emailErr);

@@ -6,18 +6,19 @@ export const EMAIL_FROM = "Merali Studio <contato@merali.com.br>";
 interface SendEmailParams {
     to: string | string[];
     subject: string;
-    react: React.ReactElement | string;
+    react?: React.ReactElement | string; // Optional if using templateId
+    templateId?: string;
+    data?: any;
 }
 
-export async function sendEmail({ to, subject, react }: SendEmailParams) {
+export async function sendEmail({ to, subject, react, templateId, data }: SendEmailParams) {
     const apiKey = process.env.RESEND_API_KEY;
 
     console.log("--- [DEBUG EMAIL START] ---");
     console.log("To:", to);
     console.log("Subject:", subject);
+    console.log("TemplateId:", templateId);
     console.log("From:", EMAIL_FROM);
-    console.log("API Key length:", apiKey?.length);
-    console.log("API Key prefix:", apiKey?.substring(0, 7));
 
     if (!apiKey) {
         console.error("❌ RESEND_API_KEY is missing!");
@@ -27,29 +28,37 @@ export async function sendEmail({ to, subject, react }: SendEmailParams) {
     const resend = new Resend(apiKey);
 
     try {
-        console.log("[Resend] Pre-rendering component...");
-
-        let htmlContent: string;
-        if (typeof react === "string") {
-            htmlContent = react;
-        } else {
-            // Dynamically require to bypass Next.js 15 analyzer
-            const { renderToStaticMarkup } = require("react-dom/server");
-            htmlContent = renderToStaticMarkup(react);
-        }
-
-        console.log("[Resend] Sending request with rendered HTML...");
-        const response = await resend.emails.send({
+        let options: any = {
             from: EMAIL_FROM,
             to,
             subject,
-            html: htmlContent,
-            // topic: Delivery optimization
             headers: {
-                "Precedence": "bulk", // Paradoxically, 'bulk' is often safer for automated transactional mail
                 "X-Entity-Ref-ID": Math.random().toString(36).substring(7),
+                "X-Priority": "1 (Highest)",
             },
-        });
+        };
+
+        if (templateId) {
+            // Use hosted template
+            console.log("[Resend] Sending using Template ID:", templateId);
+            options.template_id = templateId;
+            if (data) options.data = data;
+        } else if (react) {
+            // Fallback to local rendering
+            console.log("[Resend] Pre-rendering component...");
+            let htmlContent: string;
+            if (typeof react === "string") {
+                htmlContent = react;
+            } else {
+                const { renderToStaticMarkup } = require("react-dom/server");
+                htmlContent = renderToStaticMarkup(react);
+            }
+            options.html = htmlContent;
+        } else {
+            throw new Error("Either 'react' or 'templateId' must be provided");
+        }
+
+        const response = await resend.emails.send(options);
 
         if (response.error) {
             console.error("❌ Resend API Error:", response.error);
