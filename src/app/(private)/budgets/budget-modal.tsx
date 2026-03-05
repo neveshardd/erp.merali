@@ -268,32 +268,55 @@ export function BudgetModal({ open, onOpenChange, budget }: BudgetModalProps) {
               </div>
             </div>
 
-            <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-500">
-                Condição de Pagamento
-              </Label>
-              <Select
-                value={selectedPaymentTerms}
-                onValueChange={(value) => setValue("paymentTerms", value as any)}
-              >
-                <SelectTrigger className="h-12 rounded-xl bg-neutral-50 dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 font-bold">
-                  <SelectValue placeholder="Escolha a condição" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem
-                    value="HALF_HALF"
-                    className="font-bold uppercase text-[10px]"
-                  >
-                    50% Entrada / 50% Entrega
-                  </SelectItem>
-                  <SelectItem
-                    value="FULL"
-                    className="font-bold uppercase text-[10px]"
-                  >
-                    Valor Total à Vista
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-500">
+                  Condição de Pagamento
+                </Label>
+                <Select
+                  value={selectedPaymentTerms}
+                  onValueChange={(value) => setValue("paymentTerms", value as any)}
+                >
+                  <SelectTrigger className="h-12 rounded-xl bg-neutral-50 dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 font-bold">
+                    <SelectValue placeholder="Escolha a condição" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      value="HALF_HALF"
+                      className="font-bold uppercase text-[10px]"
+                    >
+                      50% Entrada / 50% Entrega
+                    </SelectItem>
+                    <SelectItem
+                      value="FULL"
+                      className="font-bold uppercase text-[10px]"
+                    >
+                      Valor Total à Vista
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-neutral-500">
+                  Status do Orçamento
+                </Label>
+                <Select
+                  value={watch("status")}
+                  onValueChange={(value) => setValue("status", value as any)}
+                >
+                  <SelectTrigger className="h-12 rounded-xl bg-neutral-50 dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 font-bold">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PENDING" className="font-bold uppercase text-[10px]">Pendente</SelectItem>
+                    <SelectItem value="APPROVED" className="font-bold uppercase text-[10px]">Aprovado</SelectItem>
+                    <SelectItem value="IN_PROGRESS" className="font-bold uppercase text-[10px]">Em Produção</SelectItem>
+                    <SelectItem value="FINISHED" className="font-bold uppercase text-[10px]">Finalizado</SelectItem>
+                    <SelectItem value="CANCELLED" className="font-bold uppercase text-[10px]">Cancelado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {!budget && (
