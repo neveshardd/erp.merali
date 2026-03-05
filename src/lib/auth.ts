@@ -25,5 +25,6 @@ export const auth = betterAuth({
     allowedOrigin,
     "https://merali.com.br",
     "https://www.merali.com.br",
+    "https://erp.merali.com.br",
   ].filter(Boolean),
 });
