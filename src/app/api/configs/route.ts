@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-import { corsHeaders } from "@/lib/cors";
-
-export async function OPTIONS() {
-  return NextResponse.json({}, { headers: corsHeaders });
-}
 
 export async function GET() {
   try {
@@ -18,12 +13,12 @@ export async function GET() {
       orderBy: { name: "asc" },
     });
 
-    return NextResponse.json(groups, { headers: corsHeaders });
+    return NextResponse.json(groups);
   } catch (error) {
     console.error("Error fetching configs:", error);
     return NextResponse.json(
       { error: "Erro ao buscar configurações" },
-      { status: 500, headers: corsHeaders },
+      { status: 500 },
     );
   }
 }
@@ -36,7 +31,7 @@ export async function POST(request: Request) {
     if (!name) {
       return NextResponse.json(
         { error: "Nome do grupo é obrigatório" },
-        { status: 400, headers: corsHeaders },
+        { status: 400 },
       );
     }
 
@@ -74,13 +69,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json(updatedGroup, {
       status: 201,
-      headers: corsHeaders,
     });
   } catch (error) {
     console.error("Error saving configs:", error);
     return NextResponse.json(
       { error: "Erro ao salvar configurações" },
-      { status: 500, headers: corsHeaders },
+      { status: 500 },
     );
   }
 }

@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma";
+import { allowedOrigins } from "./cors";
 
 export const auth = betterAuth({
   secret:
@@ -21,6 +22,6 @@ export const auth = betterAuth({
   trustedOrigins: [
     process.env.NEXT_PUBLIC_APP_URL || "",
     process.env.BETTER_AUTH_URL || "",
-    process.env.ALLOWED_ORIGIN || "",
+    ...allowedOrigins,
   ].filter(Boolean),
 });

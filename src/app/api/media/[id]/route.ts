@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-import { corsHeaders } from "@/lib/cors";
-
-export async function OPTIONS(_request: Request) {
-  return NextResponse.json({}, { headers: corsHeaders });
-}
 
 export async function PATCH(
   request: Request,
@@ -20,12 +15,12 @@ export async function PATCH(
       data: body,
     });
 
-    return NextResponse.json(media, { headers: corsHeaders });
+    return NextResponse.json(media);
   } catch (error) {
     console.error("Error updating media:", error);
     return NextResponse.json(
       { error: "Erro ao atualizar mídia" },
-      { status: 500, headers: corsHeaders },
+      { status: 500 },
     );
   }
 }
@@ -75,12 +70,12 @@ export async function DELETE(
       where: { id },
     });
 
-    return new NextResponse(null, { status: 204, headers: corsHeaders });
+    return new NextResponse(null, { status: 204 });
   } catch (error) {
     console.error("Error deleting media:", error);
     return NextResponse.json(
       { error: "Erro ao excluir mídia" },
-      { status: 500, headers: corsHeaders },
+      { status: 500 },
     );
   }
 }

@@ -1,23 +1,18 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-import { corsHeaders } from "@/lib/cors";
-
-export async function OPTIONS(_request: Request) {
-  return NextResponse.json({}, { headers: corsHeaders });
-}
 
 export async function GET() {
   try {
     const media = await prisma.media.findMany({
       orderBy: { createdAt: "desc" },
     });
-    return NextResponse.json(media, { headers: corsHeaders });
+    return NextResponse.json(media);
   } catch (error) {
     console.error("Error fetching media:", error);
     return NextResponse.json(
       { error: "Erro ao buscar mídia" },
-      { status: 500, headers: corsHeaders },
+      { status: 500 },
     );
   }
 }
@@ -36,12 +31,12 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(media, { status: 201, headers: corsHeaders });
+    return NextResponse.json(media, { status: 201 });
   } catch (error) {
     console.error("Error creating media:", error);
     return NextResponse.json(
       { error: "Erro ao salvar mídia" },
-      { status: 500, headers: corsHeaders },
+      { status: 500 },
     );
   }
 }
