@@ -48,7 +48,7 @@ export async function POST(
             templateId: process.env.RESEND_TEMPLATE_INVOICE,
             data: {
                 clientName: invoice.client.name,
-                amount: formatCurrency(invoice.amount),
+                amount: formatCurrency(Number(invoice.amount)), // Garante que é número para a função
                 dueDate: format(new Date(invoice.dueDate), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
                 paymentUrl: finalPaymentUrl,
             },
