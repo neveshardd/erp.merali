@@ -2,6 +2,7 @@
 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import axios from "axios";
 import {
   Calendar,
   CheckCircle2,
@@ -11,6 +12,7 @@ import {
   FileText,
   Filter,
   Loader2,
+  Mail,
   MoreHorizontal,
   Plus,
   Search,
@@ -100,6 +102,21 @@ export default function InvoicesPage() {
       setConfirmDeleteOpen(false);
     } catch (_error) {
       toast.error("Erro ao excluir fatura");
+    }
+  };
+
+  const handleSendEmail = async (id: string, clientEmail: string) => {
+    if (!clientEmail) {
+      toast.error("Cliente não possui email cadastrado");
+      return;
+    }
+
+    const toastId = toast.loading("Enviando fatura...");
+    try {
+      await axios.post(`/api/invoices/${id}/send`);
+      toast.success("Fatura enviada com sucesso!", { id: toastId });
+    } catch (_error) {
+      toast.error("Erro ao enviar fatura por email", { id: toastId });
     }
   };
 
@@ -295,10 +312,10 @@ export default function InvoicesPage() {
                   <TableCell>
                     <Badge
                       className={`text-[9px] font-black uppercase tracking-widest rounded-full px-3 py-1 ${i.status === "PAID"
-                          ? "bg-emerald-500/10 text-emerald-600"
-                          : i.status === "PENDING"
-                            ? "bg-amber-500/10 text-amber-600"
-                            : "bg-neutral-100 text-neutral-500"
+                        ? "bg-emerald-500/10 text-emerald-600"
+                        : i.status === "PENDING"
+                          ? "bg-amber-500/10 text-amber-600"
+                          : "bg-neutral-100 text-neutral-500"
                         }`}
                     >
                       {i.status === "PAID"
@@ -347,6 +364,16 @@ export default function InvoicesPage() {
                           >
                             <FileText className="w-3.5 h-3.5" /> Ver Detalhes
                           </DropdownMenuItem>
+
+                          {i.status === "PENDING" && (
+                            <DropdownMenuItem
+                              className="gap-2 font-bold uppercase tracking-widest text-[9px] cursor-pointer rounded-lg p-3 text-violet-600 hover:text-violet-700 hover:bg-violet-50"
+                              onClick={() => handleSendEmail(i.id, i.client?.email)}
+                            >
+                              <Mail className="w-3.5 h-3.5" /> Enviar p/ Cliente
+                            </DropdownMenuItem>
+                          )}
+
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="gap-2 font-bold uppercase tracking-widest text-[9px] cursor-pointer rounded-lg p-3 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"

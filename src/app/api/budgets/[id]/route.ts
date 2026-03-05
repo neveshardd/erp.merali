@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { budgetSchema } from "@/schemas/budget";
+import { sendEmail } from "@/lib/resend";
+import { BudgetApprovedEmail } from "@/components/emails/budget-approved";
 
 export async function GET(
   _request: Request,
@@ -45,6 +47,12 @@ export async function PATCH(
     const validatedData = budgetSchema.partial().parse(body);
 
     const { clientId, ...data } = validatedData;
+
+    // Get old budget to check status change
+    const oldBudget = await prisma.budget.findUnique({
+      where: { id },
+    });
+
     const budget = await prisma.budget.update({
       where: { id },
       data: {
@@ -55,6 +63,22 @@ export async function PATCH(
         client: true,
       },
     });
+
+    // topic 5: Send email if status changed to APPROVED
+    if (oldBudget?.status !== "APPROVED" && budget.status === "APPROVED" && budget.client?.email) {
+      try {
+        await sendEmail({
+          to: budget.client.email,
+          subject: "Seu Projeto foi Aprovado! - Merali Studio",
+          react: BudgetApprovedEmail({
+            clientName: budget.client.name,
+            projectName: budget.projectName,
+          }),
+        });
+      } catch (emailErr) {
+        console.error("Non-fatal budget email error:", emailErr);
+      }
+    }
 
     return NextResponse.json(budget);
   } catch (error) {

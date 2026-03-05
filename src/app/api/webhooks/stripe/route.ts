@@ -3,6 +3,9 @@ import { NextResponse } from "next/server";
 import { createNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
+import { sendEmail } from "@/lib/resend";
+import { PaymentReceivedEmail } from "@/components/emails/payment-received";
+import { formatCurrency } from "@/lib/utils";
 
 // Define the relevant events we care about
 const RELEVANT_EVENTS = new Set([
@@ -133,9 +136,23 @@ export async function POST(request: Request) {
           });
 
           console.log("🔔 Notification created successfully");
+
+          // topic 1: Send confirmation email to client
+          if (invoice?.client?.email) {
+            await sendEmail({
+              to: invoice.client.email,
+              subject: `Pagamento Confirmado - Merali Studio`,
+              react: PaymentReceivedEmail({
+                clientName: invoice.client.name,
+                amount: amountFormatted,
+                invoiceId: invoice.id,
+              }),
+            });
+            console.log(`📧 Confirmation email sent to ${invoice.client.email}`);
+          }
         } catch (notifError: any) {
           console.error(
-            "⚠️ Failed to create notification (non-fatal):",
+            "⚠️ Failed to create notification or send email (non-fatal):",
             notifError.message,
           );
         }
