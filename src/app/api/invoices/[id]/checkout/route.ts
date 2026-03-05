@@ -80,10 +80,30 @@ export async function POST(
             first_name: invoice.client.name.split(" ")[0],
             last_name: invoice.client.name.split(" ").slice(1).join(" ") || "Cliente",
           },
+          // Recommended: Detailed item info for fraud prevention
+          additional_info: {
+            items: [
+              {
+                id: invoice.id,
+                title: itemTitle,
+                description: itemDesc,
+                category_id: "others", // or 'services'
+                quantity: 1,
+                unit_price: Number(invoice.amount),
+              }
+            ],
+            payer: {
+              first_name: invoice.client.name.split(" ")[0],
+              last_name: invoice.client.name.split(" ").slice(1).join(" ") || "Cliente",
+              phone: invoice.client.phone ? { number: invoice.client.phone.replace(/\D/g, "") } : undefined,
+            }
+          },
           metadata: { invoice_id: invoice.id },
           external_reference: invoice.id,
           notification_url: `${appUrl}/api/webhooks/mercadopago`,
         },
+        // Mandatory for many MP flows: prevent double payments
+        requestOptions: { idempotencyKey: invoice.id + "_pix" }
       });
 
       await prisma.invoice.update({
@@ -96,7 +116,7 @@ export async function POST(
       });
     }
 
-    // Handles: gateway='mercadopago', method='pix', method='card_installments'
+    // Handles: gateway='mercadopago', method='card_installments'
     const excludedTypes: { id: string }[] =
       method === "card_installments"
         ? [
@@ -123,6 +143,7 @@ export async function POST(
             id: invoice.id,
             title: itemTitle,
             description: itemDesc,
+            category_id: "others", // Categorização recomendada
             quantity: 1,
             unit_price: Number(invoice.amount),
             currency_id: "BRL",

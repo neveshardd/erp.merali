@@ -1,6 +1,5 @@
 import { Resend } from "resend";
 import * as React from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 
 export const EMAIL_FROM = "Merali Studio <contato@merali.com.br>";
 
@@ -34,7 +33,8 @@ export async function sendEmail({ to, subject, react }: SendEmailParams) {
         if (typeof react === "string") {
             htmlContent = react;
         } else {
-            // Manual rendering to HTML to avoid Vercel minification issues with "react" property
+            // Dynamically require to bypass Next.js 15 analyzer
+            const { renderToStaticMarkup } = require("react-dom/server");
             htmlContent = renderToStaticMarkup(react);
         }
 
