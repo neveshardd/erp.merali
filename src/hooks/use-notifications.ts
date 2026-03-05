@@ -26,26 +26,32 @@ function getReadIds(): Set<string> {
 function saveReadIds(ids: Set<string>) {
   try {
     localStorage.setItem(READ_STORAGE_KEY, JSON.stringify([...ids]));
-  } catch {}
+  } catch { }
 }
 
 export function useNotifications() {
   const queryClient = useQueryClient();
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
 
-  // Load read state from localStorage on mount (client only)
+  // Load read state from localStorage on mount and listen for changes in other tabs
   useEffect(() => {
-    setReadIds(getReadIds());
+    const update = () => setReadIds(getReadIds());
+    update();
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === READ_STORAGE_KEY) update();
+    });
+    return () => window.removeEventListener("storage", update);
   }, []);
 
-  const { data: rawNotifications = [], isLoading } = useQuery<Notification[]>({
+  const { data: rawNotifications = [], isLoading, dataUpdatedAt } = useQuery<Notification[]>({
     queryKey: ["notifications"],
     queryFn: async () => {
       const response = await axios.get("/api/notifications");
       return response.data;
     },
-    refetchInterval: 30000, // Poll every 30 seconds
-    staleTime: 10000,
+    refetchInterval: 5000, // Poll every 5 seconds for a "live" feel
+    staleTime: 2000,
   });
 
   // Apply read state from localStorage

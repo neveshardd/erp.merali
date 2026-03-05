@@ -21,6 +21,17 @@ import { useNotifications } from "@/hooks/use-notifications";
 function AppHeader() {
   const [isNotifOpen, setIsNotifOpen] = React.useState(false);
   const { unreadCount } = useNotifications();
+  const [lastCount, setLastCount] = React.useState(unreadCount);
+  const [isPinging, setIsPinging] = React.useState(false);
+
+  React.useEffect(() => {
+    if (unreadCount > lastCount) {
+      setIsPinging(true);
+      const timer = setTimeout(() => setIsPinging(false), 3000);
+      return () => clearTimeout(timer);
+    }
+    setLastCount(unreadCount);
+  }, [unreadCount, lastCount]);
 
   return (
     <>
@@ -40,11 +51,11 @@ function AppHeader() {
             variant="ghost"
             size="icon"
             onClick={() => setIsNotifOpen(true)}
-            className="relative w-10 h-10 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all active:scale-90"
+            className={`relative w-10 h-10 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all active:scale-90 ${isPinging ? "ring-2 ring-blue-500/20" : ""}`}
           >
-            <Bell className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
+            <Bell className={`w-5 h-5 text-neutral-600 dark:text-neutral-400 ${isPinging ? "animate-bounce text-blue-600 dark:text-blue-400" : ""}`} />
             {unreadCount > 0 && (
-              <span className="absolute top-2 right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-blue-600 px-1 text-[8px] font-black leading-none text-white ring-2 ring-white dark:ring-neutral-950">
+              <span className={`absolute top-2 right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-blue-600 px-1 text-[8px] font-black leading-none text-white ring-2 ring-white dark:ring-neutral-950 ${isPinging ? "animate-pulse" : ""}`}>
                 {unreadCount > 9 ? "+9" : unreadCount}
               </span>
             )}
