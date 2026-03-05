@@ -8,9 +8,9 @@ import { ptBR } from "date-fns/locale";
 
 export async function POST(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const { id } = params;
+    const { id } = await params;
 
     try {
         const invoice = await prisma.invoice.findUnique({
