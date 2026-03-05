@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/resend";
-import { NewInvoiceEmail } from "@/components/emails/new-invoice";
 import { formatCurrency } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -48,9 +47,11 @@ export async function POST(
             templateId: process.env.RESEND_TEMPLATE_INVOICE,
             data: {
                 clientName: invoice.client.name,
-                amount: formatCurrency(Number(invoice.amount)), // Garante que é número para a função
+                amount: formatCurrency(Number(invoice.amount)),
                 dueDate: format(new Date(invoice.dueDate), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
                 paymentUrl: finalPaymentUrl,
+                bioName: "Jose Eugenio",
+                bioImage: `${baseUrl}/avatars/shadcn.jpg`,
             },
         });
 

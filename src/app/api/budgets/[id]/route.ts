@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { budgetSchema } from "@/schemas/budget";
 import { sendEmail } from "@/lib/resend";
-import { BudgetApprovedEmail } from "@/components/emails/budget-approved";
 
 export async function GET(
   _request: Request,
@@ -74,6 +73,8 @@ export async function PATCH(
           data: {
             clientName: budget.client.name,
             projectName: budget.projectName,
+            bioName: "Jose Eugenio",
+            bioImage: `${process.env.NEXT_PUBLIC_APP_URL || "https://erp.merali.com.br"}/avatars/shadcn.jpg`,
           },
         });
       } catch (emailErr) {
