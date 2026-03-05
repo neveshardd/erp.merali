@@ -11,7 +11,7 @@ import {
   FileText,
   User,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/utils";
 
 interface InvoiceDetailModalProps {
@@ -49,9 +49,9 @@ export function InvoiceDetailModal({
               <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
                 {isPaid ? "Pagamento Confirmado" : "Aguardando Pagamento"}
               </DialogTitle>
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60">
+              <DialogDescription className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 text-white/60">
                 Fatura #{invoice.id.slice(-8).toUpperCase()}
-              </span>
+              </DialogDescription>
             </div>
           </div>
           {/* Abstract background element */}

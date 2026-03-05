@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -67,9 +68,9 @@ export function ClientModal({ open, onOpenChange }: ClientModalProps) {
               <DialogTitle className="text-xl font-black uppercase tracking-tighter">
                 Cadastrar Novo Cliente
               </DialogTitle>
-              <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">
+              <DialogDescription className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">
                 Adicionar novo contato à base
-              </p>
+              </DialogDescription>
             </div>
           </div>
         </DialogHeader>
