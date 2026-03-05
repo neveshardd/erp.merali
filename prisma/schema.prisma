@@ -338,3 +338,17 @@ model BioLink {
 
   @@map("bio_link")
 }
+
+model SocialPost {
+  id          String   @id @default(cuid())
+  caption     String   @db.Text
+  imageUrls   String[]
+  platform    String   @default("instagram")
+  postId      String?  @unique
+  postUrl     String?
+  status      String   @default("published")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("social_post")
+}

@@ -3,9 +3,11 @@
 import {
   BookOpen,
   Image as ImageIcon,
+  Instagram,
   Layout,
   Link as LinkIcon,
   Settings2,
+  Share2,
   SquareTerminal,
   Users,
 } from "lucide-react";
@@ -99,6 +101,11 @@ const data = {
       name: "Biblioteca de Mídia",
       url: "/library",
       icon: ImageIcon,
+    },
+    {
+      name: "Automação Social",
+      url: "/social-automation",
+      icon: Instagram,
     },
     {
       name: "Portfólio",

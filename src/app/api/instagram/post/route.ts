@@ -1,0 +1,186 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
+
+const inputSchema = z.object({
+  caption: z.string().min(1, "A legenda não pode estar vazia"),
+  imageUrls: z.array(z.string().url()).min(1, "Pelo menos uma imagem é necessária"),
+});
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const result = inputSchema.safeParse(body);
+
+    if (!result.success) {
+      return NextResponse.json({ 
+        error: "Dados de entrada inválidos", 
+        details: result.error.format() 
+      }, { status: 400 });
+    }
+
+    const { caption, imageUrls } = result.data;
+    const igId = process.env.INSTAGRAM_BUSINESS_ID;
+    const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
+
+    // Validate explicit credentials
+    if (!igId || !accessToken) {
+      return NextResponse.json({ 
+        error: "Configuração do Instagram incompleta. Verifique as chaves no arquivo .env." 
+      }, { status: 401 });
+    }
+
+    // Instagram API Workflow
+    const isCarousel = imageUrls.length > 1;
+
+    if (isCarousel) {
+      // Step 1: Create Media Containers for each child item
+      // Instagram allows up to 10 items in a carousel
+      const itemsToPublish = imageUrls.slice(0, 10);
+      const childContainerIds = [];
+
+      for (const imageUrl of itemsToPublish) {
+        const itemRes = await fetch(`https://graph.facebook.com/v21.0/${igId}/media`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            image_url: imageUrl,
+            is_carousel_item: "true",
+            access_token: accessToken,
+          }),
+        });
+
+        const itemData = await itemRes.json();
+        if (!itemRes.ok) {
+          throw new Error(`Erro ao criar item do carrossel: ${itemData.error?.message}`);
+        }
+        childContainerIds.push(itemData.id);
+      }
+
+      // Step 2: Create Carousel Master Container
+      const carouselRes = await fetch(`https://graph.facebook.com/v21.0/${igId}/media`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          media_type: "CAROUSEL",
+          children: childContainerIds.join(","),
+          caption: caption,
+          access_token: accessToken,
+        }),
+      });
+
+      const carouselData = await carouselRes.json();
+      if (!carouselRes.ok) {
+        throw new Error(`Erro ao criar container de carrossel: ${carouselData.error?.message}`);
+      }
+
+      const creationId = carouselData.id;
+
+      // Step 3: Publish the Carousel
+      const publishRes = await fetch(`https://graph.facebook.com/v21.0/${igId}/media_publish`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          creation_id: creationId,
+          access_token: accessToken,
+        }),
+      });
+
+      const publishData = await publishRes.json();
+      if (!publishRes.ok) {
+        throw new Error(`Erro ao publicar carrossel: ${publishData.error?.message}`);
+      }
+
+      const postId = publishData.id;
+      const postUrl = `https://www.instagram.com/reels/`; // Instagram doesn't return the direct link for carousels via ID directly, but ID is provided
+
+      // Save to history
+      try {
+        await prisma.socialPost.create({
+          data: {
+            caption,
+            imageUrls,
+            platform: "instagram",
+            postId: postId,
+            postUrl: postUrl,
+            status: "published"
+          }
+        });
+      } catch (dbError) {
+        console.error("Failed to save post history to DB:", dbError);
+      }
+
+      return NextResponse.json({ 
+        status: "published", 
+        id: postId,
+        url: postUrl
+      });
+
+    } else {
+      // Single Image Flow
+      const primaryImageUrl = imageUrls[0];
+
+      // Step 1: Create Media Container
+      const containerRes = await fetch(`https://graph.facebook.com/v21.0/${igId}/media`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          image_url: primaryImageUrl,
+          caption: caption,
+          access_token: accessToken,
+        }),
+      });
+
+      const containerData = await containerRes.json();
+      if (!containerRes.ok) {
+        throw new Error(`Erro ao criar container: ${containerData.error?.message}`);
+      }
+
+      const creationId = containerData.id;
+
+      // Step 2: Publish the Container
+      const publishRes = await fetch(`https://graph.facebook.com/v21.0/${igId}/media_publish`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          creation_id: creationId,
+          access_token: accessToken,
+        }),
+      });
+
+      const publishData = await publishRes.json();
+      if (!publishRes.ok) {
+        throw new Error(`Erro ao publicar: ${publishData.error?.message}`);
+      }
+
+      const postId = publishData.id;
+      const postUrl = `https://www.instagram.com/p/${postId}/`;
+
+      // Save to history
+      try {
+        await prisma.socialPost.create({
+          data: {
+            caption,
+            imageUrls,
+            platform: "instagram",
+            postId: postId,
+            postUrl: postUrl,
+            status: "published"
+          }
+        });
+      } catch (dbError) {
+        console.error("Failed to save post history to DB:", dbError);
+      }
+
+      return NextResponse.json({ 
+        status: "published", 
+        id: postId,
+        url: postUrl
+      });
+    }
+
+  } catch (error) {
+    console.error("Instagram Route Error:", error);
+    return NextResponse.json({ error: "Erro interno no servidor ao processar a postagem" }, { status: 500 });
+  }
+}
