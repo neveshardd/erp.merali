@@ -42,7 +42,7 @@ export async function sendEmail({ to, subject, react, templateId, data }: SendEm
             // Use hosted template (Resend Dashboard)
             console.log("[Resend] Template ID:", templateId);
             console.log("[Resend] Template Data Payload:", JSON.stringify(data, null, 2));
-            options.template_id = templateId;
+            options.templateId = templateId;
             options.data = data || {};
         } else if (react) {
             // Fallback to local rendering
