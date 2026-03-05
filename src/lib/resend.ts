@@ -55,7 +55,7 @@ export async function sendEmail({ to, subject, react, templateId, data }: SendEm
             }
             options.html = htmlContent;
         } else {
-            const errorMsg = "Missing both 'react' and 'templateId'. Check if your RESEND_TEMPLATE env variables are set correctly.";
+            const errorMsg = `Missing both 'react' and 'templateId'. (templateId: ${templateId || 'missing'}, react: ${react ? 'provided' : 'missing'}). Check if your RESEND_TEMPLATE env variables are set correctly in your environment or Vercel dashboard.`;
             console.error(`❌ ${errorMsg}`);
             throw new Error(errorMsg);
         }
