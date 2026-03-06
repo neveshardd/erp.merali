@@ -50,7 +50,7 @@ export function BioLinkModal({ open, onOpenChange, initialData }: BioLinkModalPr
         setValue,
         watch,
         formState: { errors },
-    } = useForm<FormData>({
+    } = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
             title: "",
@@ -83,7 +83,7 @@ export function BioLinkModal({ open, onOpenChange, initialData }: BioLinkModalPr
         }
     }, [initialData, open, reset]);
 
-    const onSubmit = (data: FormData) => {
+    const onSubmit = (data: any) => {
         if (isEditing && initialData.id) {
             updateLink(
                 { id: initialData.id, data },
