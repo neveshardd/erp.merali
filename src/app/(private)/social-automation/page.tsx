@@ -14,18 +14,42 @@ import {
   UploadCloud,
   Wand2,
   X,
+  GripVertical,
 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
+import { DragDropContext, Droppable, Draggable, DropResult, DroppableProvided, DraggableProvided, DraggableStateSnapshot } from "@hello-pangea/dnd";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useMedia, type MediaItem } from "@/hooks/use-media";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Search } from "lucide-react";
 
 // Magic Icon reference
 const MagicIcon = Wand2;
+
+// StrictModeDroppable for React 18+ compatibility
+const StrictModeDroppable = ({ children, ...props }: any) => {
+  const [enabled, setEnabled] = React.useState(false);
+  React.useEffect(() => {
+    const animation = requestAnimationFrame(() => setEnabled(true));
+    return () => {
+      cancelAnimationFrame(animation);
+      setEnabled(false);
+    };
+  }, []);
+  if (!enabled) {
+    return null;
+  }
+  return <Droppable {...props}>{children}</Droppable>;
+};
 
 interface HistoryPost {
   id: string;
@@ -37,37 +61,29 @@ interface HistoryPost {
 
 interface SocialPostState {
   description: string;
-  media: { file: File; preview: string; id: string }[];
-  isGeneratingAI: boolean;
-  isPosting: boolean;
+  media: { file?: File; preview: string; id: string; fromLibrary?: boolean }[];
   postedUrl?: string;
-  history: HistoryPost[];
+  isLibraryModalOpen: boolean;
 }
 
 export default function SocialAutomationPage() {
+  const queryClient = useQueryClient();
   const [state, setState] = React.useState<SocialPostState>({
     description: "",
     media: [],
-    isGeneratingAI: false,
-    isPosting: false,
-    history: [],
+    isLibraryModalOpen: false,
   });
 
-  const fetchHistory = React.useCallback(async () => {
-    try {
-      const res = await fetch("/api/instagram/history");
-      if (res.ok) {
-        const data = await res.json();
-        setState(prev => ({ ...prev, history: data }));
-      }
-    } catch (error) {
-      console.error("Erro ao buscar histórico:", error);
-    }
-  }, []);
+  const { data: libraryMedia = [] } = useMedia();
+  const [librarySearch, setLibrarySearch] = React.useState("");
 
-  React.useEffect(() => {
-    fetchHistory();
-  }, [fetchHistory]);
+  const { data: history = [], refetch: refetchHistory } = useQuery({
+    queryKey: ["social-history"],
+    queryFn: async () => {
+      const response = await axios.get("/api/instagram/history");
+      return response.data as HistoryPost[];
+    }
+  });
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -87,7 +103,18 @@ export default function SocialAutomationPage() {
         id: Math.random().toString(36).substr(2, 9),
       }));
       setState((prev) => ({ ...prev, media: [...prev.media, ...newFiles] }));
+      setLibrarySearch("");
     }
+  };
+
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    const items = Array.from(state.media);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    setState((prev) => ({ ...prev, media: items }));
   };
 
   const removeMedia = (id: string) => {
@@ -100,84 +127,54 @@ export default function SocialAutomationPage() {
     });
   };
 
-  const generateWithAI = async () => {
-    if (state.media.length === 0 && !state.description) {
-      toast.error("Adicione uma imagem ou descrição para a Merali AI ter contexto!");
-      return;
-    }
-
-    setState((prev) => ({ ...prev, isGeneratingAI: true }));
-    try {
-      const response = await fetch("/api/ai/generate-caption", {
-        method: "POST",
-        body: JSON.stringify({
-          description: state.description,
-          files: state.media.map(m => m.file.name)
-        }),
-        headers: { "Content-Type": "application/json" },
+  const generateMutation = useMutation({
+    mutationFn: async () => {
+      if (state.media.length === 0 && !state.description) {
+        throw new Error("Adicione uma imagem ou descrição para a Merali AI ter contexto!");
+      }
+      const response = await axios.post("/api/ai/generate-caption", {
+        description: state.description,
+        files: state.media.map(m => m.file?.name || "library-selection")
       });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      setState((prev) => ({ ...prev, description: data.description }));
+      toast.success("Legenda refinada com prestígio!");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || error.message || "Erro ao gerar legenda.");
+    }
+  });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-          throw new Error(data.error || "Falha na geração");
+  const postMutation = useMutation({
+    mutationFn: async () => {
+      if (state.media.length === 0) {
+        throw new Error("Selecione pelo menos uma imagem!");
       }
 
-      setState((prev) => ({ ...prev, description: data.description }));
-      toast.success("Legenda gerada pelo Grok com sucesso!");
-    } catch (error: any) {
-      console.error(error);
-      toast.error(error.message || "Erro ao gerar legenda com IA.");
-    } finally {
-      setState((prev) => ({ ...prev, isGeneratingAI: false }));
-    }
-  };
-
-  const handlePost = async () => {
-    if (state.media.length === 0) {
-      toast.error("Selecione pelo menos uma imagem!");
-      return;
-    }
-
-    setState((prev) => ({ ...prev, isPosting: true }));
-    try {
-      // 1. Upload images to R2 first (reusing existing API patterns)
-      // For now, let's pretend we have a unified upload + post endpoint or do it sequentially
-      
       const uploadedUrls = [];
       for(const m of state.media) {
-          const formData = new FormData();
-          formData.append("file", m.file);
-          
-          const res = await fetch("/api/media/direct-upload", {
-              method: "POST",
-              body: formData,
-          });
+        if (m.fromLibrary) {
+          uploadedUrls.push(m.preview);
+          continue;
+        }
+        if (!m.file) continue;
 
-          if (!res.ok) throw new Error("Falha no upload do servidor");
-
-          const { publicUrl } = await res.json();
-          uploadedUrls.push(publicUrl);
+        const formData = new FormData();
+        formData.append("file", m.file);
+        
+        const res = await axios.post("/api/media/direct-upload", formData);
+        uploadedUrls.push(res.data.publicUrl);
       }
 
-      // 2. Call Instagram API
-      const response = await fetch("/api/instagram/post", {
-        method: "POST",
-        body: JSON.stringify({
-          caption: state.description,
-          imageUrls: uploadedUrls,
-        }),
-        headers: { "Content-Type": "application/json" },
+      const response = await axios.post("/api/instagram/post", {
+        caption: state.description,
+        imageUrls: uploadedUrls,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Falha ao postar");
-      }
-
-      const data = await response.json();
-      
-      // Clear state and show success with link
+      return response.data;
+    },
+    onSuccess: (data) => {
       setState((prev) => ({ 
         ...prev, 
         postedUrl: data.url,
@@ -192,15 +189,12 @@ export default function SocialAutomationPage() {
           onClick: () => window.open(data.url, "_blank")
         }
       });
-      
-    } catch (error: any) {
-      console.error(error);
-      toast.error(error.message || "Erro ao realizar a postagem.");
-    } finally {
-      setState((prev) => ({ ...prev, isPosting: false }));
-      fetchHistory(); // Refresh history
+      queryClient.invalidateQueries({ queryKey: ["social-history"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || error.message || "Erro ao postar.");
     }
-  };
+  });
 
   return (
     <main className="flex flex-col gap-8 max-w-5xl mx-auto w-full p-6">
@@ -220,27 +214,109 @@ export default function SocialAutomationPage() {
         </div>
       </header>
 
+      {/* Library Selection Modal */}
+      <Dialog open={state.isLibraryModalOpen} onOpenChange={(open) => setState(prev => ({ ...prev, isLibraryModalOpen: open }))}>
+          <DialogContent className="max-w-3xl rounded-3xl border-none shadow-2xl p-0 overflow-hidden bg-white dark:bg-neutral-950">
+              <DialogHeader className="p-6 border-b border-neutral-100 dark:border-neutral-900">
+                  <DialogTitle className="font-black uppercase tracking-tighter italic text-xl">Biblioteca Studio Merali</DialogTitle>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mt-1">Selecione mídias prontas para postagem</p>
+              </DialogHeader>
+              
+              <div className="p-6 space-y-4">
+                  <div className="relative group">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 group-focus-within:text-pink-600 transition-colors" />
+                      <Input 
+                          placeholder="Buscar na biblioteca..." 
+                          className="pl-11 h-12 bg-neutral-50 dark:bg-neutral-900 border-none rounded-2xl focus-visible:ring-2 focus-visible:ring-pink-500/20"
+                          value={librarySearch}
+                          onChange={(e) => setLibrarySearch(e.target.value)}
+                      />
+                  </div>
+
+                  <ScrollArea className="h-96">
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 p-1">
+                          {libraryMedia
+                            .filter((item: MediaItem) => item.name.toLowerCase().includes(librarySearch.toLowerCase()))
+                            .map((item: MediaItem) => {
+                              const isSelected = state.media.some(m => m.preview === item.url);
+                              return (
+                                  <button
+                                      key={item.id}
+                                      onClick={() => {
+                                          if (isSelected) {
+                                              setState(prev => ({ ...prev, media: prev.media.filter(m => m.preview !== item.url) }));
+                                          } else {
+                                              if (state.media.length >= 10) {
+                                                  toast.error("Limite de 10 imagens atingido.");
+                                                  return;
+                                              }
+                                              setState(prev => ({ 
+                                                  ...prev, 
+                                                  media: [...prev.media, { preview: item.url, id: item.id, fromLibrary: true }] 
+                                              }));
+                                          }
+                                      }}
+                                      className={cn(
+                                          "relative aspect-square rounded-xl overflow-hidden group border-2 transition-all",
+                                          isSelected ? "border-pink-500 ring-2 ring-pink-500/20" : "border-transparent"
+                                      )}
+                                  >
+                                      <img src={item.url} alt={item.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                                      {isSelected && (
+                                          <div className="absolute inset-0 bg-pink-500/20 flex items-center justify-center">
+                                              <CheckCircle2 className="w-8 h-8 text-white drop-shadow-lg" />
+                                          </div>
+                                      )}
+                                  </button>
+                              );
+                          })}
+                      </div>
+                  </ScrollArea>
+              </div>
+
+              <div className="p-6 border-t border-neutral-100 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-950/50 flex justify-end">
+                  <Button 
+                      onClick={() => setState(prev => ({ ...prev, isLibraryModalOpen: false }))}
+                      className="rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-black uppercase tracking-widest text-[10px] px-8"
+                  >
+                      Concluído
+                  </Button>
+              </div>
+          </DialogContent>
+      </Dialog>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Media & Info */}
         <div className="lg:col-span-7 space-y-8">
-          <Card className="border-none shadow-xl shadow-black/5 rounded-3xl overflow-hidden">
+          <Card className="border-none shadow-xl shadow-black/5 rounded-3xl relative">
             <CardHeader className="bg-neutral-50 dark:bg-neutral-900/50 pb-8 border-b border-neutral-100 dark:border-neutral-800">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg font-black uppercase tracking-tight italic">Mídia da Postagem</CardTitle>
-                  <CardDescription className="text-[10px] font-bold uppercase tracking-widest mt-1">
+                  <CardDescription className="text-[10px] font-black uppercase tracking-widest mt-1">
                     Suporta imagens e vídeos em alta definição
                   </CardDescription>
                 </div>
-                <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="rounded-xl font-bold uppercase tracking-widest text-[9px] h-10 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all"
-                    onClick={() => fileInputRef.current?.click()}
-                >
-                    <Plus className="w-3.5 h-3.5 mr-2" />
-                    Adicionar
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="rounded-xl font-black uppercase tracking-widest text-[9px] h-10 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all"
+                        onClick={() => setState(prev => ({ ...prev, isLibraryModalOpen: true }))}
+                    >
+                        <ImageIcon className="w-3.5 h-3.5 mr-2" />
+                        Biblioteca
+                    </Button>
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="rounded-xl font-black uppercase tracking-widest text-[9px] h-10 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all"
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        <UploadCloud className="w-3.5 h-3.5 mr-2" />
+                        Upload
+                    </Button>
+                </div>
                 <input 
                     type="file" 
                     multiple 
@@ -262,34 +338,91 @@ export default function SocialAutomationPage() {
                         </div>
                         <div className="text-center">
                             <span className="text-sm font-black uppercase tracking-tight block">Arraste seu projeto aqui</span>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mt-1">Postagens de visual prestígio</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mt-1">Postagens de visual prestígio</span>
                         </div>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                        {state.media.map((item) => (
-                            <div key={item.id} className="group relative aspect-square rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-lg">
-                                <img src={item.preview} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Preview" />
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <Button 
-                                        variant="destructive" 
-                                        size="icon" 
-                                        className="rounded-full w-10 h-10 shadow-2xl" 
-                                        onClick={() => removeMedia(item.id)}
+                    <DragDropContext onDragEnd={onDragEnd}>
+                        <StrictModeDroppable droppableId="media-grid" direction="horizontal">
+                            {(provided: DroppableProvided) => (
+                                <div 
+                                    {...provided.droppableProps}
+                                    ref={provided.innerRef}
+                                    className="grid grid-cols-2 sm:grid-cols-3 gap-6 relative"
+                                >
+                                    {state.media.map((m, index) => {
+                                        const isAlreadyPosted = history.some(post => post.imageUrls.includes(m.preview));
+                                        return (
+                                            <Draggable key={m.id} draggableId={m.id} index={index}>
+                                                {(draggableProvided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
+                                                    <div 
+                                                        ref={draggableProvided.innerRef}
+                                                        {...draggableProvided.draggableProps}
+                                                        style={{
+                                                            ...draggableProvided.draggableProps.style,
+                                                        }}
+                                                        className={cn(
+                                                            "relative aspect-square rounded-2xl overflow-hidden group shadow-xl transition-shadow",
+                                                            snapshot.isDragging && "shadow-2xl ring-2 ring-pink-500/50 z-50"
+                                                        )}
+                                                    >
+                                                        <img 
+                                                            src={m.preview} 
+                                                            alt="Post preview" 
+                                                            className="w-full h-full object-cover pointer-events-none" 
+                                                        />
+                                                        
+                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                            <button 
+                                                                onClick={() => removeMedia(m.id)}
+                                                                className="p-3 bg-red-500 hover:bg-red-600 text-white rounded-xl shadow-lg transition-all active:scale-95 z-30"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+
+                                                        {/* Number Badge */}
+                                                        <div className="absolute top-2 left-2 w-6 h-6 bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center text-[10px] font-black text-white border border-white/20 z-10">
+                                                            {index + 1}
+                                                        </div>
+
+                                                        {/* Drag Handle */}
+                                                        <div 
+                                                            {...draggableProvided.dragHandleProps}
+                                                            className="absolute bottom-2 right-2 p-1.5 bg-black/60 backdrop-blur-md rounded-lg text-white/50 hover:text-white transition-colors cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 z-20"
+                                                        >
+                                                            <GripVertical className="w-4 h-4" />
+                                                        </div>
+
+                                                        {isAlreadyPosted && (
+                                                            <div className="absolute top-2 left-10 right-2 bg-pink-600/90 backdrop-blur-md px-2 py-1 rounded-lg border border-white/20 shadow-xl flex items-center gap-1.5 z-10">
+                                                                <AlertCircle className="w-3 h-3 text-white" />
+                                                                <span className="text-[8px] font-black text-white uppercase tracking-tighter">Já postado</span>
+                                                            </div>
+                                                        )}
+                                                        
+                                                        {m.fromLibrary && (
+                                                            <div className="absolute bottom-2 left-2 bg-neutral-900/80 backdrop-blur-md px-2 py-1 rounded-lg text-[7px] font-black text-white uppercase tracking-widest z-10">
+                                                                Biblioteca
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </Draggable>
+                                        );
+                                    })}
+                                    {provided.placeholder}
+                                    <button 
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="aspect-square rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-800 flex flex-col items-center justify-center gap-2 hover:border-pink-500/50 hover:bg-pink-500/5 transition-all text-neutral-400 hover:text-pink-500"
                                     >
-                                        <Trash2 className="w-5 h-5 text-white" />
-                                    </Button>
+                                        <Plus className="w-6 h-6" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Mais</span>
+                                    </button>
                                 </div>
-                            </div>
-                        ))}
-                        <button 
-                            onClick={() => fileInputRef.current?.click()}
-                            className="aspect-square rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-800 flex flex-col items-center justify-center gap-2 hover:border-pink-500/50 hover:bg-pink-500/5 transition-all text-neutral-400 hover:text-pink-500"
-                        >
-                            <Plus className="w-6 h-6" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Mais</span>
-                        </button>
-                    </div>
+                            )}
+                        </StrictModeDroppable>
+                    </DragDropContext>
                 )}
             </CardContent>
           </Card>
@@ -306,9 +439,9 @@ export default function SocialAutomationPage() {
                         </div>
                         <div>
                             <CardTitle className="text-lg font-black uppercase tracking-tight italic">Legenda com Merali AI</CardTitle>
-                            <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-pink-600/60 mt-1 flex items-center gap-1.5">
-                                <Sparkles className="w-3 h-3" /> IA de visual prestígio
-                            </CardDescription>
+                             <CardDescription className="text-[10px] font-black uppercase tracking-widest text-pink-600/60 mt-1 flex items-center gap-1.5">
+                                 <Sparkles className="w-3 h-3" /> IA de visual prestígio
+                             </CardDescription>
                         </div>
                     </div>
                 </CardHeader>
@@ -316,14 +449,24 @@ export default function SocialAutomationPage() {
                     <div className="space-y-3">
                         <div className="flex items-center justify-between ml-1">
                             <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Conteúdo Final</Label>
-                            <button 
-                                onClick={generateWithAI}
-                                disabled={state.isGeneratingAI}
-                                className="flex items-center gap-1.5 text-pink-600 hover:text-pink-700 font-black uppercase tracking-widest text-[9px] transition-all disabled:opacity-50"
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="rounded-xl hover:bg-black/5 dark:hover:bg-white/5 h-10 px-4 transition-all"
+                                onClick={() => generateMutation.mutate()}
+                                disabled={generateMutation.isPending}
                             >
-                                {state.isGeneratingAI ? <Loader2 className="w-3 h-3 animate-spin" /> : <MagicIcon className="w-3 h-3" />}
-                                {state.description ? "Refinar Legenda" : "Gerar Legenda"}
-                            </button>
+                                {generateMutation.isPending ? (
+                                    <Loader2 className="w-4 h-4 animate-spin text-pink-600" />
+                                ) : (
+                                    <div className="flex items-center gap-2">
+                                        <MagicIcon className="w-3.5 h-3.5 text-pink-600" />
+                                        <span className="text-[9px] font-black uppercase tracking-[0.1em] text-pink-600">
+                                            {state.description ? "Refinar Legenda" : "Gerar Legenda"}
+                                        </span>
+                                    </div>
+                                )}
+                            </Button>
                         </div>
                         <Textarea 
                             placeholder="Descreva seu projeto ou deixe a Merali AI criar algo majestoso para você..." 
@@ -340,18 +483,18 @@ export default function SocialAutomationPage() {
                     </div>
 
                     <Button 
-                        onClick={handlePost}
-                        disabled={state.isPosting || state.media.length === 0}
-                        className="w-full h-16 rounded-2xl bg-neutral-900 hover:bg-black dark:bg-pink-600 dark:hover:bg-pink-700 text-white font-black uppercase tracking-widest text-xs gap-3 shadow-2xl transition-all active:scale-95 disabled:opacity-50 group overflow-hidden relative"
+                        className="w-full h-14 bg-black dark:bg-white text-white dark:text-black hover:scale-[1.02] active:scale-[0.98] transition-all rounded-2xl font-black uppercase tracking-[0.2em] shadow-2xl group relative overflow-hidden disabled:opacity-50"
+                        onClick={() => postMutation.mutate()}
+                        disabled={postMutation.isPending || state.media.length === 0}
                     >
-                        {state.isPosting ? (
+                        <div className="absolute inset-0 bg-linear-to-r from-pink-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        {postMutation.isPending ? (
                             <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
-                            <>
-                                <Instagram className="w-5 h-5" />
-                                <span>Publicar no Instagram</span>
-                                <div className="absolute inset-0 bg-white/10 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 skew-x-12" />
-                            </>
+                            <div className="flex items-center gap-3">
+                                <Share2 className="w-5 h-5" />
+                                <span>Lançar Postagem</span>
+                            </div>
                         )}
                     </Button>
 
@@ -376,13 +519,13 @@ export default function SocialAutomationPage() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {state.history.length === 0 ? (
+                {history.length === 0 ? (
                     <div className="col-span-full p-12 border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded-3xl flex flex-col items-center justify-center text-neutral-400 gap-2">
                         <ImageIcon className="w-8 h-8 opacity-20" />
                         <p className="text-[10px] font-bold uppercase tracking-widest">Nenhuma postagem registrada no ERP.</p>
                     </div>
                 ) : (
-                    state.history.map((post) => (
+                    history.map((post) => (
                         <Card key={post.id} className="rounded-3xl border-neutral-100 dark:border-neutral-900 bg-white/50 dark:bg-neutral-950/50 backdrop-blur-xl overflow-hidden group hover:border-pink-500/30 transition-all duration-500">
                             <CardContent className="p-0 flex h-32">
                                 <div className="w-32 h-full relative overflow-hidden shrink-0">
