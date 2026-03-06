@@ -4,6 +4,7 @@ import {
   BookOpen,
   Image as ImageIcon,
   Layout,
+  Link as LinkIcon,
   Settings2,
   SquareTerminal,
   Users,
@@ -66,6 +67,10 @@ const data = {
         {
           title: "Faturas e Cobranças",
           url: "/invoices",
+        },
+        {
+          title: "Links (Bio)",
+          url: "/bio-links",
         },
       ],
     },

@@ -20,6 +20,14 @@ import { ConfirmModal } from "@/components/confirm-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -44,13 +52,27 @@ export default function BriefingsPage() {
     null,
   );
 
+  const [filterStatus, setFilterStatus] = React.useState<"ALL" | "Novo" | "Respondido">("ALL");
+
   const { data: briefings = [], isLoading } = useBriefings();
   const deleteBriefing = useDeleteBriefing();
 
-  const technicalBriefings = briefings.filter(
+  const filteredBriefings = briefings.filter((b: any) => {
+    const query = searchQuery.toLowerCase();
+    const searchMatch =
+      (b.projectName || "").toLowerCase().includes(query) ||
+      (b.clientName || "").toLowerCase().includes(query) ||
+      (b.email || "").toLowerCase().includes(query);
+
+    const statusMatch = filterStatus === "ALL" || b.status === filterStatus;
+
+    return searchMatch && statusMatch;
+  });
+
+  const technicalBriefings = filteredBriefings.filter(
     (b: any) => b.type === "TECHNICAL",
   );
-  const generalBriefings = briefings.filter((b: any) => b.type === "GENERAL");
+  const generalBriefings = filteredBriefings.filter((b: any) => b.type === "GENERAL");
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -128,12 +150,48 @@ export default function BriefingsPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button
-            variant="outline"
-            className="h-12 gap-2 font-bold uppercase tracking-widest text-[10px] rounded-xl border-neutral-200 shadow-none px-6"
-          >
-            <Filter className="w-4 h-4" /> Filtros
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="h-12 gap-2 font-bold uppercase tracking-widest text-[10px] rounded-xl border-neutral-200 shadow-none px-6"
+              >
+                <Filter className="w-4 h-4" /> Filtros
+                {filterStatus !== "ALL" && (
+                  <Badge className="ml-2 h-5 bg-neutral-900 text-white font-black text-[8px] px-2 rounded-md">
+                    {filterStatus}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 rounded-xl border-neutral-200 dark:border-neutral-800">
+              <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
+                Filtrar por Status
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                className="text-[10px] font-bold uppercase tracking-widest gap-2 cursor-pointer"
+                checked={filterStatus === "ALL"}
+                onCheckedChange={() => setFilterStatus("ALL")}
+              >
+                Todos
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                className="text-[10px] font-bold uppercase tracking-widest gap-2 cursor-pointer"
+                checked={filterStatus === "Novo"}
+                onCheckedChange={() => setFilterStatus("Novo")}
+              >
+                Novo
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                className="text-[10px] font-bold uppercase tracking-widest gap-2 cursor-pointer"
+                checked={filterStatus === "Respondido"}
+                onCheckedChange={() => setFilterStatus("Respondido")}
+              >
+                Respondido
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <TabsContent value="technical">
