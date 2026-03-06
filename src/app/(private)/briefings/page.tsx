@@ -111,6 +111,7 @@ export default function BriefingsPage() {
           <Button
             variant="outline"
             className="gap-2 font-bold uppercase tracking-widest text-[10px] h-10 rounded-xl border-neutral-200 dark:border-neutral-800 cursor-pointer shadow-none"
+            onClick={() => copyToClipboard(`${process.env.NEXT_PUBLIC_SHOWCASE_URL}/briefing`)}
           >
             <LinkIcon className="w-3.5 h-3.5" /> Link Landing Page
           </Button>
@@ -268,7 +269,7 @@ export default function BriefingsPage() {
                             className="w-8 h-8 text-neutral-400 hover:text-neutral-900 cursor-pointer"
                             onClick={() =>
                               copyToClipboard(
-                                `https://merali.com/briefing/${b.id}`,
+                                `${process.env.NEXT_PUBLIC_SHOWCASE_URL}/briefing/${b.id}`,
                               )
                             }
                           >
