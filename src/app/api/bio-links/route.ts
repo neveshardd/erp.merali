@@ -2,12 +2,24 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { bioLinkSchema } from "@/schemas/bio-link";
 
-export async function GET() {
+import { isOriginAllowed, corsHeaders } from "@/lib/cors";
+
+export async function GET(request: Request) {
     try {
+        const origin = request.headers.get("origin");
+        const isAllowed = isOriginAllowed(origin);
+
         const links = await prisma.bioLink.findMany({
             orderBy: { order: "asc" },
         });
-        return NextResponse.json(links);
+
+        const headers = new Headers();
+        if (origin && isAllowed) {
+            headers.set("Access-Control-Allow-Origin", origin);
+            headers.set("Access-Control-Allow-Credentials", "true");
+        }
+
+        return NextResponse.json(links, { headers });
     } catch (error) {
         console.error("Error fetching bio links:", error);
         return NextResponse.json(
