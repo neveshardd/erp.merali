@@ -76,7 +76,10 @@ export async function POST(request: Request) {
 
       const creationId = carouselData.id;
 
-      // Step 3: Publish the Carousel
+      // Step 3: Aguardar o processamento do carrossel
+      await new Promise(resolve => setTimeout(resolve, 5000));
+
+      // Step 4: Publish the Carousel
       const publishRes = await fetch(`https://graph.facebook.com/v21.0/${igId}/media_publish`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -88,11 +91,22 @@ export async function POST(request: Request) {
 
       const publishData = await publishRes.json();
       if (!publishRes.ok) {
-        throw new Error(`Erro ao publicar carrossel: ${publishData.error?.message}`);
+        throw new Error(`Erro ao publicar carrossel: ${publishData.error?.message || "O Instagram recusou o carrossel"}`);
       }
 
       const postId = publishData.id;
-      const postUrl = `https://www.instagram.com/reels/`; // Instagram doesn't return the direct link for carousels via ID directly, but ID is provided
+      
+      // Step 5: Obter o link real da postagem (Permalink)
+      let postUrl = `https://www.instagram.com/reels/`; // Fallback
+      try {
+        const permalinkRes = await fetch(`https://graph.facebook.com/v21.0/${postId}?fields=permalink&access_token=${accessToken}`);
+        const permalinkData = await permalinkRes.json();
+        if (permalinkRes.ok && permalinkData.permalink) {
+          postUrl = permalinkData.permalink;
+        }
+      } catch (e) {
+        console.error("Erro ao buscar permalink do carrossel:", e);
+      }
 
       // Save to history
       try {
@@ -133,12 +147,15 @@ export async function POST(request: Request) {
 
       const containerData = await containerRes.json();
       if (!containerRes.ok) {
-        throw new Error(`Erro ao criar container: ${containerData.error?.message}`);
+        throw new Error(`Erro ao criar container: ${containerData.error?.message || "Resposta inválida do Instagram"}`);
       }
 
       const creationId = containerData.id;
 
-      // Step 2: Publish the Container
+      // Step 2: Aguardar o processamento da imagem (importante para evitar erro de "Media not ready")
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // Step 3: Publish the Container
       const publishRes = await fetch(`https://graph.facebook.com/v21.0/${igId}/media_publish`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -150,11 +167,22 @@ export async function POST(request: Request) {
 
       const publishData = await publishRes.json();
       if (!publishRes.ok) {
-        throw new Error(`Erro ao publicar: ${publishData.error?.message}`);
+        throw new Error(`Erro ao publicar: ${publishData.error?.message || "O Instagram não autorizou a publicação"}`);
       }
 
       const postId = publishData.id;
-      const postUrl = `https://www.instagram.com/p/${postId}/`;
+
+      // Step 4: Obter o link real da postagem (Permalink)
+      let postUrl = `https://www.instagram.com/p/${postId}/`; // Fallback
+      try {
+        const permalinkRes = await fetch(`https://graph.facebook.com/v21.0/${postId}?fields=permalink&access_token=${accessToken}`);
+        const permalinkData = await permalinkRes.json();
+        if (permalinkRes.ok && permalinkData.permalink) {
+          postUrl = permalinkData.permalink;
+        }
+      } catch (e) {
+        console.error("Erro ao buscar permalink:", e);
+      }
 
       // Save to history
       try {
@@ -179,8 +207,11 @@ export async function POST(request: Request) {
       });
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Instagram Route Error:", error);
-    return NextResponse.json({ error: "Erro interno no servidor ao processar a postagem" }, { status: 500 });
+    return NextResponse.json({ 
+      error: "Erro ao processar a postagem",
+      details: error.message || "Erro interno no servidor"
+    }, { status: 500 });
   }
 }
