@@ -36,8 +36,9 @@ export async function POST(request: Request) {
         Diretrizes:
         - Tom: Majestoso, técnico, porém inspirador.
         - Foco: Hiper-realismo, atmosfera, luz e a transformação do amanhã.
-        - Estrutura: Comece com uma frase de impacto curta e poderosa. Siga com um parágrafo curto e envolvente. Use 2-3 emojis elegantes e 5-8 hashtags estratégicas em bloco no final.
+        - Estrutura: Comece com uma frase de impacto curta e poderosa. Siga com um parágrafo curto e envolvente. Use 2-3 emojis elegantes e blocos de hashtags estratégicas.
         - Idioma: Português Brasileiro de alto nível.
+        - HASHTAGS (Obrigatório): Sempre utilize uma combinação das seguintes hashtags de alto engajamento para Renders 3D e ArchViz: #ArchViz #3DRendering #CGI #ArchitectureVisualization #InteriorDesign #ArchitectureDaily #Hyperrealism #DigitalArch #StudioMerali.
         - Nunca use palavras clichê como 'incrível' ou 'top'. Prefira 'atemporal', 'sublime', 'excepcional', 'precisão'.`
     });
 
@@ -52,11 +53,12 @@ export async function POST(request: Request) {
     DIRETRIZES DE REFINAMENTO:
     1. PRIORIDADE: Use o texto do usuário como a base da 'intenção'. Se o texto estiver simples, transforme-o em algo poético, técnico e minimalista.
     2. FOCO: Injete conceitos de 'atmosfera', 'luz', 'presença' e 'experiência sensorial'.
-    3. ESTRUTURA OBRIGATÓRIA: 
+    3. HASHTAGS: Inclua obrigatoriamente as hashtags em alta: #ArchViz #3DRendering #CGI #ArchitectureVisualization #ArchitectureDaily #VisualizacaoArquitetonica #StudioMerali.
+    4. ESTRUTURA OBRIGATÓRIA: 
        - Um parágrafo impactante em Português (refinando a ideia original).
        - Uma assinatura de marca poderosa em Português.
        - Uma versão fiel e elegante em Inglês (EN).
-       - 5 Hashtags premium coerentes.
+       - O bloco de hashtags premium mencionado.
        
     TEXTO/CONTEXTO ORIGINAL DO USUÁRIO: "${description || "Uma nova obra prima do Studio Merali."}"
 
