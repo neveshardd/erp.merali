@@ -67,6 +67,9 @@ export async function GET(request: Request) {
     // 5. Retornar os dados para o usuário e informar que foi salvo
     return new NextResponse(`
       <html>
+        <head>
+          <meta charset="UTF-8">
+        </head>
         <body style="font-family: sans-serif; padding: 40px; background: #fafafa; color: #333; display: flex; align-items: center; justify-content: center; min-height: 80vh;">
           <div style="max-width: 500px; width: 100%; background: white; padding: 40px; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.05); text-align: center;">
             <div style="font-size: 50px; margin-bottom: 20px;">✅</div>
