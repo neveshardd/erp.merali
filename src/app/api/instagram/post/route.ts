@@ -20,14 +20,52 @@ export async function POST(request: Request) {
     }
 
     const { caption, imageUrls } = result.data;
-    const igId = process.env.INSTAGRAM_BUSINESS_ID;
-    const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
 
-    // Validate explicit credentials
-    if (!igId || !accessToken) {
+    // 1. Buscar credenciais do Banco de Dados
+    const account = await prisma.socialAccount.findUnique({
+      where: { platform: "instagram" }
+    });
+
+    if (!account || !account.accessToken || !account.businessId) {
       return NextResponse.json({ 
-        error: "Configuração do Instagram incompleta. Verifique as chaves no arquivo .env." 
+        error: "Instagram não conectado", 
+        details: "Por favor, realize a conexão no painel de Automação Social primeiro." 
       }, { status: 401 });
+    }
+
+    let accessToken = account.accessToken;
+    const igId = account.businessId;
+
+    // 2. Lógica de Auto-Renovação (se o token tiver mais de 30 dias, tentamos renovar)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    if (account.updatedAt < thirtyDaysAgo) {
+      console.log("Renovando token do Instagram automaticamente...");
+      try {
+        const appId = process.env.FACEBOOK_APP_ID;
+        const appSecret = process.env.FACEBOOK_APP_SECRET;
+        
+        const refreshRes = await fetch(
+          `https://graph.facebook.com/v21.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${appId}&client_secret=${appSecret}&fb_exchange_token=${accessToken}`
+        );
+        const refreshData = await refreshRes.json();
+        
+        if (refreshRes.ok && refreshData.access_token) {
+          accessToken = refreshData.access_token;
+          await prisma.socialAccount.update({
+            where: { id: account.id },
+            data: { 
+              accessToken,
+              updatedAt: new Date()
+            }
+          });
+          console.log("Token renovado com sucesso.");
+        }
+      } catch (refreshError) {
+        console.error("Falha ao renovar token automaticamente:", refreshError);
+        // Continuamos com o token antigo, talvez ainda funcione
+      }
     }
 
     // Instagram API Workflow

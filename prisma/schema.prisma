@@ -303,6 +303,18 @@ model SocialPost {
   @@map("social_post")
 }
 
+model SocialAccount {
+  id           String    @id @default(cuid())
+  platform     String    @unique // "instagram"
+  accessToken  String    @db.Text
+  businessId   String?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("social_account")
+}
+
 enum BudgetStatus {
   PENDING
   APPROVED

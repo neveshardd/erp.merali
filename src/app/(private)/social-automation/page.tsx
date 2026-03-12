@@ -85,6 +85,14 @@ export default function SocialAutomationPage() {
     }
   });
 
+  const { data: igAccount } = useQuery({
+    queryKey: ["ig-account"],
+    queryFn: async () => {
+      const response = await axios.get("/api/instagram/account");
+      return response.data;
+    }
+  });
+
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -198,7 +206,7 @@ export default function SocialAutomationPage() {
 
   return (
     <main className="flex flex-col gap-8 max-w-5xl mx-auto w-full p-6">
-      <header className="flex flex-col gap-2">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-linear-to-br from-purple-600 via-pink-500 to-orange-400 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-500/20">
             <Instagram className="w-6 h-6 text-white" />
@@ -211,6 +219,39 @@ export default function SocialAutomationPage() {
               Criação Inteligente e Publicação Automática
             </p>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+            {!igAccount?.businessId ? (
+                <Button 
+                    className="rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-black uppercase tracking-widest text-[10px] px-6 h-11 shadow-lg shadow-pink-500/20"
+                    onClick={() => {
+                        const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID;
+                        const redirectUri = `${window.location.origin}/api/auth/social/instagram/callback`;
+                        const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement`;
+                        window.open(authUrl, "Conectar Instagram", "width=600,height=700");
+                    }}
+                >
+                    Conectar Instagram
+                </Button>
+            ) : (
+                <div className="flex items-center gap-2 px-4 h-11 bg-green-500/10 rounded-xl border border-green-500/20">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-green-600">Conectado</span>
+                    <button 
+                        onClick={() => {
+                            const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID;
+                            const redirectUri = `${window.location.origin}/api/auth/social/instagram/callback`;
+                            const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement`;
+                            window.open(authUrl, "Reconectar Instagram", "width=600,height=700");
+                        }}
+                        className="ml-2 text-neutral-400 hover:text-pink-500 transition-colors"
+                        title="Reconectar"
+                    >
+                        <Share2 className="w-3.5 h-3.5" />
+                    </button>
+                </div>
+            )}
         </div>
       </header>
 

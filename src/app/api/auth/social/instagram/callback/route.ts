@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -48,23 +49,33 @@ export async function GET(request: Request) {
       }, { status: 404 });
     }
 
-    // 4. Retornar os dados para o usuário salvar (ou salvar no DB futuramente)
-    // Por agora, vamos mostrar na tela para você copiar uma última vez e colocar no .env de forma definitiva
+    // 4. Salvar ou atualizar no Banco de Dados automaticamente
+    await prisma.socialAccount.upsert({
+      where: { platform: "instagram" },
+      update: {
+        accessToken: accessToken,
+        businessId: igId,
+        updatedAt: new Date(),
+      },
+      create: {
+        platform: "instagram",
+        accessToken: accessToken,
+        businessId: igId,
+      },
+    });
+
+    // 5. Retornar os dados para o usuário e informar que foi salvo
     return new NextResponse(`
       <html>
-        <body style="font-family: sans-serif; padding: 40px; background: #fafafa; color: #333;">
-          <div style="max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; shadow: 0 10px 30px rgba(0,0,0,0.1);">
-            <h1 style="color: #e1306c;">✨ Conectado com Sucesso!</h1>
-            <p>O ERP Studio Merali agora tem acesso ao seu Instagram.</p>
-            <div style="background: #f0f0f0; padding: 20px; border-radius: 10px; margin-top: 20px;">
-              <p><strong>Copie estas variáveis para o seu arquivo .env:</strong></p>
-              <pre style="white-space: pre-wrap; word-break: break-all;">
-INSTAGRAM_ACCESS_TOKEN=${accessToken}
-INSTAGRAM_BUSINESS_ID=${igId}
-              </pre>
+        <body style="font-family: sans-serif; padding: 40px; background: #fafafa; color: #333; display: flex; align-items: center; justify-content: center; min-height: 80vh;">
+          <div style="max-width: 500px; width: 100%; background: white; padding: 40px; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.05); text-align: center;">
+            <div style="font-size: 50px; margin-bottom: 20px;">✅</div>
+            <h1 style="color: #333; font-weight: 900; letter-spacing: -0.05em; margin-bottom: 10px;">CONECTADO!</h1>
+            <p style="color: #666; line-height: 1.6;">As credenciais foram salvas automaticamente no banco de dados do ERP.</p>
+            <div style="background: #f8f8f8; padding: 15px; border-radius: 15px; margin: 25px 0; font-size: 13px; color: #888;">
+              O sistema agora renovará os tokens automaticamente.
             </div>
-            <p style="margin-top: 20px; color: #666; font-size: 14px;">Este token é de longa duração e não expirará em poucas horas.</p>
-            <button onclick="window.close()" style="background: #333; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Fechar Janela</button>
+            <button onclick="window.close()" style="background: #000; color: white; border: none; padding: 15px 30px; border-radius: 15px; font-weight: bold; cursor: pointer; width: 100%; transition: scale 0.2s;">Fechar Janela</button>
           </div>
         </body>
       </html>
