@@ -553,7 +553,7 @@ export default function SocialAutomationPage() {
         </div>
 
         {/* Historico de Postagens */}
-        <div className="flex flex-col gap-6">
+        <div className="lg:col-span-12 flex flex-col gap-6 mt-12">
             <div className="flex items-center gap-2">
                 <Rocket className="w-5 h-5 text-pink-600" />
                 <h2 className="font-black text-xl uppercase tracking-tighter italic">Histórico de Lançamentos</h2>
