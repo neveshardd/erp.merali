@@ -227,7 +227,7 @@ export default function SocialAutomationPage() {
                     className="rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-black uppercase tracking-widest text-[10px] px-6 h-11 shadow-lg shadow-pink-500/20"
                     onClick={() => {
                         const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID;
-                        const redirectUri = `${window.location.origin}/api/auth/social/instagram/callback`;
+                        const redirectUri = encodeURIComponent(`${window.location.origin}/api/auth/social/instagram/callback`);
                         const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement`;
                         window.open(authUrl, "Conectar Instagram", "width=600,height=700");
                     }}
@@ -241,7 +241,7 @@ export default function SocialAutomationPage() {
                     <button 
                         onClick={() => {
                             const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID;
-                            const redirectUri = `${window.location.origin}/api/auth/social/instagram/callback`;
+                            const redirectUri = encodeURIComponent(`${window.location.origin}/api/auth/social/instagram/callback`);
                             const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement`;
                             window.open(authUrl, "Reconectar Instagram", "width=600,height=700");
                         }}
@@ -502,7 +502,7 @@ export default function SocialAutomationPage() {
                                 ) : (
                                     <div className="flex items-center gap-2">
                                         <MagicIcon className="w-3.5 h-3.5 text-pink-600" />
-                                        <span className="text-[9px] font-black uppercase tracking-[0.1em] text-pink-600">
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-pink-600">
                                             {state.description ? "Refinar Legenda" : "Gerar Legenda"}
                                         </span>
                                     </div>
