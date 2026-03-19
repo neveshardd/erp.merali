@@ -151,7 +151,9 @@ export default function SocialAutomationPage() {
       toast.success("Legenda refinada com prestígio!");
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || error.message || "Erro ao gerar legenda.");
+      const err = error.response?.data?.error;
+      const msg = typeof err === "string" ? err : (err?.message || error.message || "Erro ao gerar legenda.");
+      toast.error(msg);
     }
   });
 
@@ -169,11 +171,18 @@ export default function SocialAutomationPage() {
         }
         if (!m.file) continue;
 
-        const formData = new FormData();
-        formData.append("file", m.file);
-        
-        const res = await axios.post("/api/media/direct-upload", formData);
-        uploadedUrls.push(res.data.publicUrl);
+        const presignedReq = await axios.post("/api/media/upload", {
+          filename: m.file.name,
+          contentType: m.file.type,
+        });
+
+        const { url, publicUrl } = presignedReq.data;
+
+        await axios.put(url, m.file, {
+          headers: { "Content-Type": m.file.type },
+        });
+
+        uploadedUrls.push(publicUrl);
       }
 
       const response = await axios.post("/api/instagram/post", {
@@ -200,7 +209,9 @@ export default function SocialAutomationPage() {
       queryClient.invalidateQueries({ queryKey: ["social-history"] });
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || error.message || "Erro ao postar.");
+      const err = error.response?.data?.error;
+      const msg = typeof err === "string" ? err : (err?.message || error.message || "Erro ao postar.");
+      toast.error(msg);
     }
   });
 
