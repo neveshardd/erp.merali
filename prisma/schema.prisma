@@ -305,13 +305,16 @@ model SocialPost {
 
 model SocialAccount {
   id           String    @id @default(cuid())
-  platform     String    @unique // "instagram"
+  platform     String    // "instagram"
   accessToken  String    @db.Text
   businessId   String?
   expiresAt    DateTime?
+  userId       String?
+  sessionId    String?   // Vínculo por sessão para exigir re-login em máquinas diferentes
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  @@unique([platform, userId, sessionId])
   @@map("social_account")
 }
 

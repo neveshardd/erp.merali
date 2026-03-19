@@ -105,11 +105,17 @@ export default function SocialAutomationPage() {
         return;
       }
 
-      const newFiles = addedFiles.map((file) => ({
-        file,
-        preview: URL.createObjectURL(file),
-        id: Math.random().toString(36).substr(2, 9),
-      }));
+      const newFiles = addedFiles.map((file) => {
+        if (file.size > 8 * 1024 * 1024) {
+          toast.warning(`A imagem ${file.name} excede 8MB. O Instagram pode rejeitá-la.`);
+        }
+        return {
+          file,
+          preview: URL.createObjectURL(file),
+          id: Math.random().toString(36).substr(2, 9),
+          type: file.type.startsWith("video") ? "VIDEO" : "IMAGE",
+        };
+      });
       setState((prev) => ({ ...prev, media: [...prev.media, ...newFiles] }));
       setLibrarySearch("");
     }

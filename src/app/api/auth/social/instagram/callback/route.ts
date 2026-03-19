@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -50,8 +51,17 @@ export async function GET(request: Request) {
     }
 
     // 4. Salvar ou atualizar no Banco de Dados automaticamente
+    // OBS: Vinculamos à sessão atual para exigir re-conexão em máquinas/ips diferentes como solicitado
+    const session = await auth.api.getSession({ headers: request.headers });
+    
     await prisma.socialAccount.upsert({
-      where: { platform: "instagram" },
+      where: {
+        platform_userId_sessionId: {
+          platform: "instagram",
+          userId: session?.user?.id || null,
+          sessionId: session?.session?.id || null,
+        }
+      },
       update: {
         accessToken: accessToken,
         businessId: igId,
@@ -61,6 +71,8 @@ export async function GET(request: Request) {
         platform: "instagram",
         accessToken: accessToken,
         businessId: igId,
+        userId: session?.user?.id,
+        sessionId: session?.session?.id,
       },
     });
 

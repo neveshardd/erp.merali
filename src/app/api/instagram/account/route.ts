@@ -1,10 +1,23 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const session = await auth.api.getSession({ headers: request.headers });
+    
+    if (!session) {
+      return NextResponse.json({ connected: false });
+    }
+
     const account = await prisma.socialAccount.findUnique({
-      where: { platform: "instagram" },
+      where: {
+        platform_userId_sessionId: {
+          platform: "instagram",
+          userId: session.user.id,
+          sessionId: session.session.id,
+        }
+      },
       select: {
         updatedAt: true,
         businessId: true,

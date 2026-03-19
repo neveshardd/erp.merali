@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+// Refreshed
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 
 const inputSchema = z.object({
   caption: z.string().min(1, "A legenda não pode estar vazia"),
@@ -9,6 +11,7 @@ const inputSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const session = await auth.api.getSession({ headers: request.headers });
     const body = await request.json();
     const result = inputSchema.safeParse(body);
 
@@ -19,11 +22,21 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
+    if (!session) {
+      return NextResponse.json({ error: "Sessão inválida ou expirada" }, { status: 401 });
+    }
+
     const { caption, imageUrls } = result.data;
 
-    // 1. Buscar credenciais do Banco de Dados
+    // 1. Buscar credenciais vinculadas a esta sessão específica
     const account = await prisma.socialAccount.findUnique({
-      where: { platform: "instagram" }
+      where: {
+        platform_userId_sessionId: {
+          platform: "instagram",
+          userId: session.user.id,
+          sessionId: session.session.id,
+        }
+      }
     });
 
     if (!account || !account.accessToken || !account.businessId) {
@@ -78,19 +91,53 @@ export async function POST(request: Request) {
       const childContainerIds = [];
 
       for (const imageUrl of itemsToPublish) {
-        const itemRes = await fetch(`https://graph.facebook.com/v21.0/${igId}/media`, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            image_url: imageUrl,
-            is_carousel_item: "true",
-            access_token: accessToken,
-          }),
-        });
+        console.log(`[Instagram] Trip-wire check para URL: ${imageUrl}`);
+        
+        try {
+          const fetchCheck = await fetch(imageUrl, { method: "HEAD", signal: AbortSignal.timeout(5000) });
+          if (!fetchCheck.ok) {
+            console.error(`[Instagram] URL inacessível pelo servidor: ${fetchCheck.status} ${fetchCheck.statusText} (${imageUrl})`);
+            throw new Error(`A imagem não está acessível publicamente (Status: ${fetchCheck.status}). Verifique as configurações de armazenamento.`);
+          }
+          console.log(`[Instagram] URL acessível (HEAD 200).`);
+        } catch (headError: any) {
+          console.warn(`[Instagram] Erro ao validar acessibilidade com HEAD (ignorando, mas pode ser a causa):`, headError.message);
+        }
 
-        const itemData = await itemRes.json();
+        let itemData: any;
+        let itemRes: any;
+        let retries = 3;
+
+        while (retries > 0) {
+          itemRes = await fetch(`https://graph.facebook.com/v21.0/${igId}/media`, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+              image_url: imageUrl,
+              is_carousel_item: "true",
+              access_token: accessToken,
+            }),
+          });
+
+          itemData = await itemRes.json();
+          
+          if (itemRes.ok) break;
+
+          console.warn(`[Instagram] Falha na tentativa (restam ${retries-1}):`, itemData.error);
+          
+          // Se o erro for recorrente e "unexpected", pode ser o scraper do FB banindo a rota ou imagem muito grande
+          if (itemData.error?.message?.includes("unexpected error") && retries === 1) {
+            console.error("[Instagram] Facebook reportou erro inesperado persistente. Possível imagem inválida ou bloqueada pelo scraper.");
+          }
+
+          retries--;
+          if (retries > 0) await new Promise(r => setTimeout(r, 2000)); 
+        }
+
         if (!itemRes.ok) {
-          throw new Error(`Erro ao criar item do carrossel: ${itemData.error?.message}`);
+          console.error("[Instagram] Erro fatal após retentativas:", itemData.error);
+          const fbMsg = itemData.error?.error_user_msg || itemData.error?.message || "Erro desconhecido no Facebook";
+          throw new Error(`Erro ao criar item do carrossel: ${fbMsg}`);
         }
         childContainerIds.push(itemData.id);
       }
