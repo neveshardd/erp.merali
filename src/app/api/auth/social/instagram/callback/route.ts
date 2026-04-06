@@ -54,12 +54,19 @@ export async function GET(request: Request) {
     // OBS: Vinculamos à sessão atual para exigir re-conexão em máquinas/ips diferentes como solicitado
     const session = await auth.api.getSession({ headers: request.headers });
     
+    if (!session?.user?.id || !session?.session?.id) {
+       return NextResponse.json({ error: "Sessão não autenticada ou expirada" }, { status: 401 });
+    }
+
+    const userId = session.user.id;
+    const sessionId = session.session.id;
+
     await prisma.socialAccount.upsert({
       where: {
         platform_userId_sessionId: {
           platform: "instagram",
-          userId: session?.user?.id || null,
-          sessionId: session?.session?.id || null,
+          userId: userId,
+          sessionId: sessionId,
         }
       },
       update: {
@@ -71,8 +78,8 @@ export async function GET(request: Request) {
         platform: "instagram",
         accessToken: accessToken,
         businessId: igId,
-        userId: session?.user?.id,
-        sessionId: session?.session?.id,
+        userId: userId,
+        sessionId: sessionId,
       },
     });
 
